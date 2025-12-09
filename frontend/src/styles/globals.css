@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-space-grotesk);
+  --font-mono: var(--font-jetbrains-mono);
+  --font-display: var(--font-bricolage-grotesque);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-weight: 400;
+}
+
+/* Extreme weight utilities for high contrast typography */
+.font-ultra-light {
+  font-weight: 200;
+}
+
+.font-ultra-bold {
+  font-weight: 800;
+}
+
+/* Display headings with Bricolage Grotesque */
+.text-display {
+  font-family: var(--font-bricolage-grotesque), sans-serif;
+}
