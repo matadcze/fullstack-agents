@@ -1,0 +1,35 @@
+# VCS
+.git
+.gitignore
+
+# Dependency caches / installs
+node_modules
+*.tsbuildinfo
+.venv
+venv
+env
+ENV
+.mypy_cache
+.ruff_cache
+.pytest_cache
+__pycache__/
+
+# Build artifacts
+.next
+dist
+build
+coverage
+.nyc_output
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode
+.idea
+*.swp
+*.swo
+
+# Env files (provided at runtime)
+.env
+backend/.env
+frontend/.env
