@@ -46,7 +46,7 @@ def upgrade() -> None:
         'audit_events',
         sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True),
         sa.Column('user_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.id', ondelete='SET NULL'), nullable=True, index=True),
-        sa.Column('event_type', sa.Enum('USER_REGISTERED', 'USER_LOGGED_IN', 'USER_LOGGED_OUT', 'PASSWORD_CHANGED', 'USER_UPDATED', 'USER_DELETED', 'RESOURCE_CREATED', 'RESOURCE_UPDATED', 'RESOURCE_DELETED', name='eventtype'), nullable=False, index=True),
+        sa.Column('event_type', event_type, nullable=False, index=True),
         sa.Column('resource_id', postgresql.UUID(as_uuid=True), nullable=True, index=True),
         sa.Column('details', sa.JSON(), nullable=False, server_default='{}'),
         sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('now()'), index=True)
