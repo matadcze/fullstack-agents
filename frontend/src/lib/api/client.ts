@@ -19,6 +19,7 @@ export class ApiError extends Error {
   constructor(
     public status: number,
     public response: ErrorResponse | string,
+    public correlationId: string | null = null,
     message?: string,
   ) {
     super(message || String(response));
@@ -82,6 +83,8 @@ class ApiClient {
         headers,
       });
 
+      const correlationIdHeader = response.headers.get("x-correlation-id");
+
       if (response.status === 204) {
         return undefined as T;
       }
@@ -89,9 +92,15 @@ class ApiClient {
       const data = await response.json().catch(() => null);
 
       if (!response.ok) {
+        const correlationId =
+          correlationIdHeader ||
+          ((data as ErrorResponse | null)?.error?.correlation_id
+            ? String((data as ErrorResponse).error.correlation_id)
+            : null);
         throw new ApiError(
           response.status,
           data || response.statusText,
+          correlationId,
           `API error: ${response.status}`,
         );
       }
@@ -104,12 +113,12 @@ class ApiClient {
 
       if (error instanceof Error) {
         if (error.name === "AbortError") {
-          throw new ApiError(0, "Request timed out. Please try again.", error.message);
+          throw new ApiError(0, "Request timed out. Please try again.", null, error.message);
         }
-        throw new ApiError(0, error.message, error.message);
+        throw new ApiError(0, error.message, null, error.message);
       }
 
-      throw new ApiError(0, "Network error. Please try again.", "Network error");
+      throw new ApiError(0, "Network error. Please try again.", null, "Network error");
     } finally {
       clearTimeout(timeoutId);
     }
