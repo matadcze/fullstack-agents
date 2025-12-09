@@ -1,4 +1,4 @@
-.PHONY: help install backend-install frontend-install backend-dev frontend-dev dev backend-test frontend-test test backend-lint frontend-lint lint backend-format frontend-format format backend-typecheck pre-commit-install pre-commit seed clean docker-build docker-up docker-down
+.PHONY: help install backend-install frontend-install backend-dev frontend-dev dev backend-test frontend-test test backend-lint frontend-lint lint backend-format frontend-format format backend-typecheck pre-commit-install pre-commit seed clean docker-build docker-up docker-down docker-dev-prepare docker-dev-up
 
 help:
 	@echo "{{PROJECT_NAME}} - Development Commands"
@@ -29,6 +29,8 @@ help:
 	@echo "  make seed                 Seed local dev data"
 	@echo ""
 	@echo "Docker:"
+	@echo "  make docker-dev-prepare   Install backend/frontend deps into dev volumes for hot reload"
+	@echo "  make docker-dev-up        Run backend+frontend+nginx with dev override (hot reload)"
 	@echo "  make docker-build         Build Docker images"
 	@echo "  make docker-up            Start Docker containers"
 	@echo "  make docker-down          Stop Docker containers"
@@ -120,12 +122,23 @@ docker-up:
 	@echo "Starting Docker containers..."
 	docker compose up -d
 	@echo "Services running:"
+	@echo "   Gateway: http://localhost"
 	@echo "   Backend:  http://localhost:8000"
 	@echo "   Frontend: http://localhost:3000"
 
 docker-down:
 	@echo "Stopping Docker containers..."
 	docker compose down
+
+docker-dev-prepare:
+	@echo "Installing backend dependencies into dev volume..."
+	docker compose -f docker-compose.yml -f docker-compose.override.yml run --rm backend uv sync --frozen --group dev
+	@echo "Installing frontend dependencies into dev volume..."
+	docker compose -f docker-compose.yml -f docker-compose.override.yml run --rm frontend npm install
+
+docker-dev-up:
+	@echo "Starting dev stack with hot reload (backend+frontend+nginx)..."
+	docker compose -f docker-compose.yml -f docker-compose.override.yml up backend frontend nginx
 
 
 clean:

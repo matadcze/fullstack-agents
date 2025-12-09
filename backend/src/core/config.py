@@ -42,6 +42,7 @@ class Settings(BaseSettings):
 
     # CORS Configuration
     cors_origins: List[str] = [
+        "http://localhost",
         "http://localhost:3000",
         "http://localhost:8000",
     ]
@@ -62,6 +63,9 @@ class Settings(BaseSettings):
             object.__setattr__(self, "celery_broker_url", self.redis_url)
         if not self.celery_result_backend:
             object.__setattr__(self, "celery_result_backend", self.redis_url)
+        # Always allow localhost (port 80) for Nginx in local/dev setups
+        if "http://localhost" not in self.cors_origins:
+            object.__setattr__(self, "cors_origins", [*self.cors_origins, "http://localhost"])
         # Ensure upload directory exists for basic readiness checks
         self.upload_dir.mkdir(parents=True, exist_ok=True)
 

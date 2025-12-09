@@ -11,7 +11,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U fullstack-agents" ]
+      test: [ "CMD-SHELL", "pg_isready -U fullstack_agents" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -99,6 +99,21 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+    restart: unless-stopped
+
+  # Nginx reverse proxy
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: fullstack-agents-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/snippets:/etc/nginx/snippets:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - backend
+      - frontend
     restart: unless-stopped
 
   # Prometheus Monitoring

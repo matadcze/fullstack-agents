@@ -15,10 +15,11 @@ Reusable FastAPI + React (Next.js) starter with JWT auth, audit logging, async S
 
 2) Copy env files and fill in secrets:
 ```
-cp .env.example .env
 cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
 ```
    - Set `DATABASE_URL`, `JWT_SECRET_KEY` (e.g. `python -c "import secrets; print(secrets.token_urlsafe(32))"`), and adjust any hostnames/ports.
+   - When using Docker/nginx, set `NEXT_PUBLIC_API_URL` to `http://localhost` in `frontend/.env` so requests go through the reverse proxy. For local Next.js dev (`npm run dev`), override to `http://localhost:8000` in `frontend/.env.local`.
    - For local Next.js runs, you can also place `NEXT_PUBLIC_*` values in `frontend/.env.local`.
 
 3) Local dev (no Docker):
@@ -33,7 +34,7 @@ make dev   # runs uvicorn + next dev
 ```
 docker compose up -d --build
 ```
-Services: backend `:8000`, frontend `:3000`, Prometheus `:9091`, Grafana `:3001` (admin/admin).
+Services: nginx entrypoint `:80` (proxies frontend + backend), backend `:8000`, frontend `:3000`, Prometheus `:9091`, Grafana `:3001` (admin/admin).
 
 ## Developer Tooling
 - Git hooks: `make pre-commit-install` to add hooks (ruff/black/isort/mypy + frontend lint/format). Run on demand with `make pre-commit`.
@@ -53,9 +54,9 @@ Services: backend `:8000`, frontend `:3000`, Prometheus `:9091`, Grafana `:3001`
 ```
 
 ## Environment Variables
-- Canonical example: `.env.example` (root) and `backend/.env.example`
+- Canonical examples: `backend/.env.example` and `frontend/.env.example`
 - Key values: `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET_KEY`, `NEXT_PUBLIC_API_URL`, `APP_NAME`, `LLM_PROVIDER`, `LLM_MODEL`, `LLM_API_KEY`
-- Docker Compose reads `backend/.env` for backend + frontend containers.
+- Docker Compose reads `backend/.env` for backend services and `frontend/.env` (with `NEXT_PUBLIC_API_URL=http://localhost`) for the nginx entrypoint.
 
 ## Testing
 - Backend: `make backend-test` (pytest sample health test) and `make backend-typecheck` (mypy)
