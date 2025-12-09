@@ -22,8 +22,7 @@ services:
     container_name: fullstack-agents-redis
     ports:
       - "6379:6379"
-    volumes:
-      - redis-data:/data
+    command: [ "redis-server", "--save", "", "--appendonly", "no" ]
     restart: unless-stopped
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
@@ -107,6 +106,7 @@ services:
     container_name: fullstack-agents-nginx
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./nginx/snippets:/etc/nginx/snippets:ro
@@ -172,8 +172,6 @@ services:
 
 volumes:
   postgres-data:
-    driver: local
-  redis-data:
     driver: local
   prometheus-data:
     driver: local

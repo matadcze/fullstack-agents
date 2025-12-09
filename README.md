@@ -58,6 +58,12 @@ Services: nginx entrypoint `:80` (proxies frontend + backend), backend `:8000`, 
 - Key values: `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET_KEY`, `NEXT_PUBLIC_API_URL`, `APP_NAME`, `LLM_PROVIDER`, `LLM_MODEL`, `LLM_API_KEY`
 - Docker Compose reads `backend/.env` for backend services and `frontend/.env` (with `NEXT_PUBLIC_API_URL=http://localhost`) for the nginx entrypoint.
 
+## Scaling & Sessions
+- **Backend workers**: The provided compose files run a single Uvicorn process. For horizontal scale, run multiple backend replicas behind nginx or a load balancer and set `UVICORN_WORKERS` (or switch to gunicorn+uvicorn workers) based on CPU cores. Keep migrations as a one-shot job to avoid race conditions when scaling.
+- **Celery**: Scale `celery-worker` replicas independently for background throughput. `celery-beat` should stay singleton.
+- **Sessions/state**: The app is stateless (JWT auth), so horizontal scaling is safe. Redis is used for rate limiting; if you add server-side sessions or websockets, plan for a shared store (Redis) and sticky sessions where needed.
+- **Redis persistence**: Persistence is disabled by default (see compose files). Enable AOF/RDB only if you need durable state beyond caching/rate-limit counters. For production durability, use a managed Redis or mount a volume with the desired persistence mode.
+
 ## Testing
 - Backend: `make backend-test` (pytest sample health test) and `make backend-typecheck` (mypy)
 - Frontend: `make frontend-test` / `npm run test:e2e` (Playwright sample, adjust selectors as you extend UI)
