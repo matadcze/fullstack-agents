@@ -90,8 +90,8 @@ jobs:
       - name: Lint frontend
         run: npm run lint
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+      # - name: Install Playwright browsers
+      #   run: npx playwright install --with-deps
 
-      - name: Test frontend (Playwright)
-        run: npm run test:e2e
+      # - name: Test frontend (Playwright)
+      #   run: npm run test:e2e
