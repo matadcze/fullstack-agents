@@ -319,47 +319,49 @@ export default function ProfilePage() {
                     {passwordLoading ? "Updating..." : "Update password"}
                   </button>
                 </div>
+              </form>
+            </div>
 
-                <div className="bg-white shadow rounded-xl p-6 border border-red-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm uppercase tracking-[0.3em] text-red-500 font-semibold">
-                        Danger
-                      </p>
-                      <h2 className="text-2xl font-ultra-bold text-gray-900 tracking-tight">
-                        Delete account
-                      </h2>
-                      <p className="text-sm text-gray-600 mt-1">
-                        Permanently remove your account and all associated data. This action cannot
-                        be undone.
-                      </p>
-                    </div>
-                  </div>
-
-                  {deleteStatus && (
-                    <div
-                      className={`mt-4 rounded-md p-4 text-sm ${
-                        deleteStatus.type === "success"
-                          ? "bg-emerald-50 text-emerald-800 border border-emerald-100"
-                          : "bg-red-50 text-red-800 border border-red-100"
-                      }`}
-                    >
-                      {deleteStatus.message}
-                    </div>
-                  )}
-
-                  <div className="mt-6 flex items-center justify-between">
-                    <p className="text-sm text-gray-700">
-                      This will sign you out and permanently delete your data.
+            <div className="bg-white shadow rounded-xl p-6 border border-red-100">
+              <form onSubmit={handleDeleteAccount} className="mt-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.3em] text-red-500 font-semibold">
+                      Danger
                     </p>
-                    <button
-                      onClick={handleDeleteAccount}
-                      disabled={deleteLoading}
-                      className="px-4 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-70"
-                    >
-                      {deleteLoading ? "Deleting..." : "Delete account"}
-                    </button>
+                    <h2 className="text-2xl font-ultra-bold text-gray-900 tracking-tight">
+                      Delete account
+                    </h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Permanently remove your account and all associated data. This action cannot be
+                      undone.
+                    </p>
                   </div>
+                </div>
+
+                {deleteStatus && (
+                  <div
+                    className={`mt-4 rounded-md p-4 text-sm ${
+                      deleteStatus.type === "success"
+                        ? "bg-emerald-50 text-emerald-800 border border-emerald-100"
+                        : "bg-red-50 text-red-800 border border-red-100"
+                    }`}
+                  >
+                    {deleteStatus.message}
+                  </div>
+                )}
+
+                <div className="mt-6 flex items-center justify-between">
+                  <p className="text-sm text-gray-700">
+                    This will sign you out and permanently delete your data.
+                  </p>
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={deleteLoading}
+                    className="px-4 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-70"
+                  >
+                    {deleteLoading ? "Deleting..." : "Delete account"}
+                  </button>
                 </div>
               </form>
             </div>
