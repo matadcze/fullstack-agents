@@ -1,0 +1,14 @@
+[
+  {
+    "email": "admin@example.com",
+    "full_name": "Admin User",
+    "password": "ChangeMe123!",
+    "is_active": true
+  },
+  {
+    "email": "demo@example.com",
+    "full_name": "Demo User",
+    "password": "DemoPass123!",
+    "is_active": true
+  }
+]

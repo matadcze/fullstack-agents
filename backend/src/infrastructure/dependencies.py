@@ -4,24 +4,20 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import settings
-from src.domain.repositories import (
-    AuditEventRepository,
-    UserRepository,
-)
-from src.domain.services import AuthService
-from src.domain.services import AgentService
+from src.domain.repositories import AuditEventRepository, UserRepository
+from src.domain.services import AgentService, AuthService
 from src.domain.services.metrics_provider import MetricsProvider
+from src.infrastructure.agents.providers import get_llm_provider
+from src.infrastructure.auth.jwt_provider import JWTProvider
+from src.infrastructure.auth.password import PasswordUtils
+from src.infrastructure.auth.rate_limiter import AuthRateLimiter, get_auth_rate_limiter
 from src.infrastructure.database.session import get_db
 from src.infrastructure.metrics import PrometheusMetricsProvider
 from src.infrastructure.repositories import (
     AuditEventRepositoryImpl,
-    UserRepositoryImpl,
     RefreshTokenRepositoryImpl,
+    UserRepositoryImpl,
 )
-from src.infrastructure.auth.jwt_provider import JWTProvider
-from src.infrastructure.auth.password import PasswordUtils
-from src.infrastructure.auth.rate_limiter import get_auth_rate_limiter, AuthRateLimiter
-from src.infrastructure.agents.providers import get_llm_provider
 
 
 def get_user_repository(db: AsyncSession = Depends(get_db)) -> UserRepository:

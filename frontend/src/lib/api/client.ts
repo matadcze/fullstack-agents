@@ -19,7 +19,7 @@ export class ApiError extends Error {
   constructor(
     public status: number,
     public response: ErrorResponse | string,
-    message?: string
+    message?: string,
   ) {
     super(message || String(response));
     this.name = "ApiError";
@@ -57,7 +57,7 @@ class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit & { method?: string; isFormData?: boolean } = {}
+    options: RequestInit & { method?: string; isFormData?: boolean } = {},
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     const controller = new AbortController();
@@ -92,7 +92,7 @@ class ApiClient {
         throw new ApiError(
           response.status,
           data || response.statusText,
-          `API error: ${response.status}`
+          `API error: ${response.status}`,
         );
       }
 

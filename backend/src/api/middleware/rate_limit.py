@@ -1,28 +1,29 @@
 import logging
 import time
-from typing import Callable
+from typing import Callable, Optional
 
 import redis.asyncio as aioredis
 from fastapi import Request, Response, status
+from redis.asyncio import Redis
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from src.api.schemas import ErrorDetail, ErrorResponse
 from src.core.config import settings
 from src.core.logging import get_correlation_id, log_json, set_correlation_id
-from src.api.schemas import ErrorDetail, ErrorResponse
 from src.infrastructure.auth.jwt_provider import JWTProvider
 
 logger = logging.getLogger("app.rate_limit")
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app, redis_url: str = None, requests_per_minute: int = None):
+    def __init__(self, app, redis_url: str | None = None, requests_per_minute: int | None = None):
         super().__init__(app)
         self.redis_url = redis_url or settings.redis_url
         self.requests_per_minute = requests_per_minute or settings.rate_limit_per_minute
         self.window_size = 60
-        self._redis_client = None
+        self._redis_client: Optional[Redis[str]] = None
 
-    async def get_redis_client(self):
+    async def get_redis_client(self) -> Redis[str]:
         if self._redis_client is None:
             self._redis_client = aioredis.from_url(
                 self.redis_url, decode_responses=True, encoding="utf-8"

@@ -144,7 +144,7 @@ export default function LoginPage() {
               href="/register"
               className="font-bold text-indigo-600 hover:text-indigo-500 tracking-wide"
             >
-              Don't have an account? Sign up
+              Don&rsquo;t have an account? Sign up
             </Link>
           </div>
         </form>

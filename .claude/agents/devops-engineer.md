@@ -239,7 +239,7 @@ terraform {
       version = "~> 2.0"
     }
   }
-  
+
   backend "s3" {
     bucket = "myapp-terraform-state"
     key    = "infrastructure/terraform.tfstate"
@@ -254,62 +254,62 @@ provider "aws" {
 # VPC and Networking
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
-  
+
   name = "${var.project_name}-vpc"
   cidr = var.vpc_cidr
-  
+
   azs             = var.availability_zones
   private_subnets = var.private_subnet_cidrs
   public_subnets  = var.public_subnet_cidrs
-  
+
   enable_nat_gateway = true
   enable_vpn_gateway = false
   enable_dns_hostnames = true
   enable_dns_support = true
-  
+
   tags = local.common_tags
 }
 
 # EKS Cluster
 module "eks" {
   source = "terraform-aws-modules/eks/aws"
-  
+
   cluster_name    = "${var.project_name}-cluster"
   cluster_version = var.kubernetes_version
-  
+
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
-  
+
   cluster_endpoint_private_access = true
   cluster_endpoint_public_access  = true
-  
+
   # Node groups
   eks_managed_node_groups = {
     main = {
       desired_size = var.node_desired_size
       max_size     = var.node_max_size
       min_size     = var.node_min_size
-      
+
       instance_types = var.node_instance_types
       capacity_type  = "ON_DEMAND"
-      
+
       k8s_labels = {
         Environment = var.environment
         NodeGroup   = "main"
       }
-      
+
       update_config = {
         max_unavailable_percentage = 25
       }
     }
   }
-  
+
   # Cluster access entry
   access_entries = {
     admin = {
       kubernetes_groups = []
       principal_arn     = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-      
+
       policy_associations = {
         admin = {
           policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
@@ -320,7 +320,7 @@ module "eks" {
       }
     }
   }
-  
+
   tags = local.common_tags
 }
 
@@ -328,7 +328,7 @@ module "eks" {
 resource "aws_db_subnet_group" "main" {
   name       = "${var.project_name}-db-subnet-group"
   subnet_ids = module.vpc.private_subnets
-  
+
   tags = merge(local.common_tags, {
     Name = "${var.project_name}-db-subnet-group"
   })
@@ -337,50 +337,50 @@ resource "aws_db_subnet_group" "main" {
 resource "aws_security_group" "rds" {
   name_prefix = "${var.project_name}-rds-"
   vpc_id      = module.vpc.vpc_id
-  
+
   ingress {
     from_port   = 5432
     to_port     = 5432
     protocol    = "tcp"
     cidr_blocks = [var.vpc_cidr]
   }
-  
+
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   tags = local.common_tags
 }
 
 resource "aws_db_instance" "main" {
   identifier = "${var.project_name}-db"
-  
+
   engine         = "postgres"
   engine_version = var.postgres_version
   instance_class = var.db_instance_class
-  
+
   allocated_storage     = var.db_allocated_storage
   max_allocated_storage = var.db_max_allocated_storage
   storage_type          = "gp3"
   storage_encrypted     = true
-  
+
   db_name  = var.database_name
   username = var.database_username
   password = var.database_password
-  
+
   vpc_security_group_ids = [aws_security_group.rds.id]
   db_subnet_group_name   = aws_db_subnet_group.main.name
-  
+
   backup_retention_period = var.backup_retention_period
   backup_window          = "03:00-04:00"
   maintenance_window     = "sun:04:00-sun:05:00"
-  
+
   skip_final_snapshot = var.environment != "production"
   deletion_protection = var.environment == "production"
-  
+
   tags = local.common_tags
 }
 
@@ -393,33 +393,33 @@ resource "aws_elasticache_subnet_group" "main" {
 resource "aws_security_group" "redis" {
   name_prefix = "${var.project_name}-redis-"
   vpc_id      = module.vpc.vpc_id
-  
+
   ingress {
     from_port   = 6379
     to_port     = 6379
     protocol    = "tcp"
     cidr_blocks = [var.vpc_cidr]
   }
-  
+
   tags = local.common_tags
 }
 
 resource "aws_elasticache_replication_group" "main" {
   replication_group_id       = "${var.project_name}-cache"
   description                = "Redis cache for ${var.project_name}"
-  
+
   node_type            = var.redis_node_type
   port                 = 6379
   parameter_group_name = "default.redis7"
-  
+
   num_cache_clusters = var.redis_num_cache_nodes
-  
+
   subnet_group_name  = aws_elasticache_subnet_group.main.name
   security_group_ids = [aws_security_group.redis.id]
-  
+
   at_rest_encryption_enabled = true
   transit_encryption_enabled = true
-  
+
   tags = local.common_tags
 }
 
@@ -427,28 +427,28 @@ resource "aws_elasticache_replication_group" "main" {
 resource "aws_security_group" "alb" {
   name_prefix = "${var.project_name}-alb-"
   vpc_id      = module.vpc.vpc_id
-  
+
   ingress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   ingress {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   tags = local.common_tags
 }
 
@@ -458,9 +458,9 @@ resource "aws_lb" "main" {
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
   subnets            = module.vpc.public_subnets
-  
+
   enable_deletion_protection = var.environment == "production"
-  
+
   tags = local.common_tags
 }
 
@@ -657,7 +657,7 @@ prometheus:
           resources:
             requests:
               storage: 50Gi
-    
+
     additionalScrapeConfigs:
       - job_name: 'kubernetes-pods'
         kubernetes_sd_configs:
@@ -688,7 +688,7 @@ grafana:
     enabled: true
     storageClassName: gp3
     size: 10Gi
-  
+
   dashboardProviders:
     dashboardproviders.yaml:
       apiVersion: 1

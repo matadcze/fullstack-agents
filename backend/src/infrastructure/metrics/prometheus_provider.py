@@ -1,10 +1,6 @@
 """Prometheus metrics provider implementation."""
 
-from src.core.metrics import (
-    audit_events_total,
-    auth_operation_duration,
-    auth_operations_total,
-)
+from src.core.metrics import audit_events_total, auth_operation_duration, auth_operations_total
 from src.domain.services.metrics_provider import MetricsProvider
 
 

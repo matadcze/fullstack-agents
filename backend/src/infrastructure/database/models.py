@@ -1,18 +1,10 @@
 import uuid
-from src.core.time import utc_now
 
-from sqlalchemy import (
-    Boolean,
-    Column,
-    DateTime,
-    Enum,
-    ForeignKey,
-    JSON,
-    String,
-)
+from sqlalchemy import JSON, Boolean, Column, DateTime, Enum, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
+from src.core.time import utc_now
 from src.domain.value_objects import EventType
 
 from .session import Base

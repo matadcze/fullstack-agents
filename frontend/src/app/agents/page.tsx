@@ -29,8 +29,9 @@ export default function AgentPlayground() {
       });
       setOutput(response.output);
       setSteps(response.steps);
-    } catch (err: any) {
-      setError(err?.message ?? "Agent run failed");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Agent run failed";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -45,16 +46,14 @@ export default function AgentPlayground() {
           </p>
           <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Run an agent</h1>
           <p className="text-sm text-gray-700">
-            Submit a prompt to the stubbed agent endpoint. Swap the provider in the backend to
-            call your preferred LLM.
+            Submit a prompt to the stubbed agent endpoint. Swap the provider in the backend to call
+            your preferred LLM.
           </p>
         </header>
 
         <div className="bg-white shadow rounded-xl border border-indigo-50 p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-800 mb-1">
-              Prompt
-            </label>
+            <label className="block text-sm font-medium text-gray-800 mb-1">Prompt</label>
             <textarea
               rows={4}
               className="w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm text-gray-900 bg-white"

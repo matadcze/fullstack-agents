@@ -29,6 +29,12 @@ Optional:
 - Celery worker: `uv run celery -A src.worker.celery_app worker --loglevel=info`
 - Celery beat: `uv run celery -A src.worker.celery_app beat --loglevel=info`
 
+## Developer Tooling
+- Linting/formatting: `make backend-lint` (ruff + black) and `make backend-format` (isort + black + ruff --fix) from the repo root.
+- Type checks: `make backend-typecheck` (mypy) for quick regressions in types.
+- Git hooks: `make pre-commit-install` to install hooks; run on demand with `make pre-commit`.
+- Seed data: `make seed` creates fixture users (admin@example.com / ChangeMe123! and demo@example.com / DemoPass123!) plus sample audit events. Safe to rerun.
+
 ## Project Layout
 
 - `src/api`: FastAPI app factory, routers, middleware, schemas

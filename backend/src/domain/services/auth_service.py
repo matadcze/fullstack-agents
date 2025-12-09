@@ -1,9 +1,10 @@
 import hashlib
 import time
 from datetime import datetime, timedelta
-from src.core.time import utc_now
 from typing import NamedTuple, Optional
 from uuid import UUID
+
+from src.core.time import utc_now
 
 from ..entities import RefreshToken, User
 from ..exceptions import AuthenticationError, ValidationError
@@ -166,7 +167,7 @@ class AuthService:
             user_id = UUID(payload["sub"])
 
             token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
-            stored_token = await self.refresh_token_repo.get_by_token_hash(token_hash)
+            _stored_token = await self.refresh_token_repo.get_by_token_hash(token_hash)
 
             await self.refresh_token_repo.revoke_by_token_hash(token_hash)
 

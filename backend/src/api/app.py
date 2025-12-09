@@ -9,7 +9,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 
 from src.api.middleware import MetricsMiddleware, RateLimitMiddleware, RequestLoggingMiddleware
 from src.api.schemas import ErrorDetail, ErrorResponse
-from src.api.v1 import audit, auth, health, agents
+from src.api.v1 import agents, audit, auth, health
 from src.core.config import settings
 from src.core.logging import configure_logging, get_correlation_id
 from src.domain.exceptions import (

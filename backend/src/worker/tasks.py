@@ -5,11 +5,9 @@ This module defines Celery tasks for background processing.
 Add your custom background tasks here following the example pattern.
 """
 
-import asyncio
-
 from src.core.logging import configure_logging, log_json
 from src.core.time import utc_now
-from src.infrastructure.database.session import AsyncSessionLocal
+
 from .celery_app import celery_app
 
 

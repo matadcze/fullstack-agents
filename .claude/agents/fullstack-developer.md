@@ -555,7 +555,7 @@ function App() {
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
                   <Route path="/posts" element={<PostsPage />} />
-                  
+
                   {/* Protected routes */}
                   <Route path="/dashboard" element={
                     <ProtectedRoute>
@@ -616,7 +616,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
     case 'LOGIN_START':
       return { ...state, isLoading: true };
-    
+
     case 'LOGIN_SUCCESS':
       localStorage.setItem('auth_token', action.payload.token);
       localStorage.setItem('refresh_token', action.payload.refreshToken);
@@ -627,7 +627,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         isLoading: false,
         isAuthenticated: true,
       };
-    
+
     case 'LOGIN_FAILURE':
       localStorage.removeItem('auth_token');
       localStorage.removeItem('refresh_token');
@@ -638,7 +638,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         isLoading: false,
         isAuthenticated: false,
       };
-    
+
     case 'LOGOUT':
       localStorage.removeItem('auth_token');
       localStorage.removeItem('refresh_token');
@@ -648,10 +648,10 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         token: null,
         isAuthenticated: false,
       };
-    
+
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
-    
+
     default:
       return state;
   }
@@ -745,15 +745,15 @@ export function useAuth() {
 // frontend/src/services/api.ts - API client
 import axios, { AxiosError } from 'axios';
 import toast from 'react-hot-toast';
-import { 
-  User, 
-  Post, 
-  AuthResponse, 
-  LoginRequest, 
+import {
+  User,
+  Post,
+  AuthResponse,
+  LoginRequest,
   CreateUserRequest,
   CreatePostRequest,
   PaginatedResponse,
-  ApiResponse 
+  ApiResponse
 } from '../types/api';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
@@ -797,7 +797,7 @@ api.interceptors.response.use(
 
           const newToken = response.data.data.token;
           localStorage.setItem('auth_token', newToken);
-          
+
           // Retry original request with new token
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
           return api(originalRequest);
@@ -961,7 +961,7 @@ export function PostCard({ post, showActions = true, className = '' }: PostCardP
         </div>
 
         <h3 className="text-xl font-semibold text-gray-900 mb-3">
-          <Link 
+          <Link
             to={`/posts/${post.id}`}
             className="hover:text-blue-600 transition-colors"
           >

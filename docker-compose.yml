@@ -2,7 +2,7 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: {{PROJECT_NAME_LOWER}}-postgres
+    container_name: fullstack-agents-postgres
     env_file:
       - ./.env
     ports:
@@ -11,7 +11,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U {{PROJECT_NAME_LOWER}}" ]
+      test: [ "CMD-SHELL", "pg_isready -U fullstack-agents" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -19,7 +19,7 @@ services:
   # Redis Cache & Message Broker
   redis:
     image: redis:7-alpine
-    container_name: {{PROJECT_NAME_LOWER}}-redis
+    container_name: fullstack-agents-redis
     ports:
       - "6379:6379"
     volumes:
@@ -36,7 +36,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: {{PROJECT_NAME_LOWER}}-backend
+    container_name: fullstack-agents-backend
     ports:
       - "8000:8000"
     env_file:
@@ -59,7 +59,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: {{PROJECT_NAME_LOWER}}-celery-worker
+    container_name: fullstack-agents-celery-worker
     env_file:
       - ./.env
     command: uv run celery -A src.worker.celery_app worker --loglevel=info
@@ -75,7 +75,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: {{PROJECT_NAME_LOWER}}-celery-beat
+    container_name: fullstack-agents-celery-beat
     env_file:
       - ./.env
     command: uv run celery -A src.worker.celery_app beat --loglevel=info
@@ -91,7 +91,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: {{PROJECT_NAME_LOWER}}-frontend
+    container_name: fullstack-agents-frontend
     ports:
       - "3000:3000"
     env_file:
@@ -104,7 +104,7 @@ services:
   # Prometheus Monitoring
   prometheus:
     image: prom/prometheus:v2.54.1
-    container_name: {{PROJECT_NAME_LOWER}}-prometheus
+    container_name: fullstack-agents-prometheus
     ports:
       # Expose Prometheus on host port 9091 while keeping the default container port 9090
       - "9091:9090"
@@ -125,7 +125,7 @@ services:
   # Grafana Dashboards
   grafana:
     image: grafana/grafana:11.4.0
-    container_name: {{PROJECT_NAME_LOWER}}-grafana
+    container_name: fullstack-agents-grafana
     ports:
       - "3001:3000"
     environment:

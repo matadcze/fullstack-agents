@@ -1,7 +1,8 @@
 import time
-from typing import Tuple
+from typing import Optional, Tuple
 
 import redis.asyncio as aioredis
+from redis.asyncio import Redis
 
 from src.core.config import settings
 
@@ -15,11 +16,11 @@ class AuthRateLimiter:
     FAILED_LOGIN_THRESHOLD = 5
     ACCOUNT_LOCKOUT_MINUTES = 15
 
-    def __init__(self, redis_url: str = None):
+    def __init__(self, redis_url: Optional[str] = None):
         self.redis_url = redis_url or settings.redis_url
-        self._redis_client = None
+        self._redis_client: Optional[Redis[str]] = None
 
-    async def get_redis_client(self):
+    async def get_redis_client(self) -> Redis[str]:
         if self._redis_client is None:
             self._redis_client = aioredis.from_url(
                 self.redis_url, decode_responses=True, encoding="utf-8"

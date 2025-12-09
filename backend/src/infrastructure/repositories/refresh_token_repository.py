@@ -1,11 +1,11 @@
 import hashlib
-from src.core.time import utc_now
 from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.time import utc_now
 from src.domain.entities import RefreshToken
 from src.domain.repositories import RefreshTokenRepository
 from src.infrastructure.database.models import RefreshTokenModel
@@ -40,7 +40,7 @@ class RefreshTokenRepositoryImpl(RefreshTokenRepository):
         result = await self.session.execute(
             select(RefreshTokenModel).where(
                 RefreshTokenModel.token_hash == token_hash,
-                RefreshTokenModel.revoked == False,
+                RefreshTokenModel.revoked.is_(False),
                 RefreshTokenModel.expires_at > utc_now(),
             )
         )

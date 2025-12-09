@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
   // Enable standalone output for Docker deployments
-  output: 'standalone',
+  output: "standalone",
 };
 
 export default nextConfig;

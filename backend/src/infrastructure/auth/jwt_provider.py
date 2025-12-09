@@ -2,11 +2,11 @@ from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional
 from uuid import UUID
 
-from jose import JWTError, ExpiredSignatureError, jwt
+from jose import ExpiredSignatureError, JWTError, jwt
 
 from src.core.config import settings
-from src.domain.exceptions import AuthenticationError
 from src.core.time import utc_now
+from src.domain.exceptions import AuthenticationError
 
 
 class JWTProvider:

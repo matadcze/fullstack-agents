@@ -35,6 +35,12 @@ docker compose up -d --build
 ```
 Services: backend `:8000`, frontend `:3000`, Prometheus `:9091`, Grafana `:3001` (admin/admin).
 
+## Developer Tooling
+- Git hooks: `make pre-commit-install` to add hooks (ruff/black/isort/mypy + frontend lint/format). Run on demand with `make pre-commit`.
+- Lint/format: `make lint` (backend + frontend) and `make format` to apply fixes. Backend type checks via `make backend-typecheck`.
+- Sample data: `make seed` loads fixture users (e.g., admin@example.com / ChangeMe123!) and basic audit events for local testing.
+- Frontend formatting uses Prettier; linting runs ESLint flat config in `frontend/eslint.config.mjs`.
+
 ## Project Structure
 ```
 .
@@ -52,8 +58,8 @@ Services: backend `:8000`, frontend `:3000`, Prometheus `:9091`, Grafana `:3001`
 - Docker Compose reads `backend/.env` for backend + frontend containers.
 
 ## Testing
-- Backend: `make backend-test` (pytest sample health test)
-- Frontend: `npm run test:e2e` (Playwright sample, adjust selectors as you extend UI)
+- Backend: `make backend-test` (pytest sample health test) and `make backend-typecheck` (mypy)
+- Frontend: `make frontend-test` / `npm run test:e2e` (Playwright sample, adjust selectors as you extend UI)
 
 ## Next Steps
 - Add your domains: extend `backend/src/domain` and `backend/src/api/v1`

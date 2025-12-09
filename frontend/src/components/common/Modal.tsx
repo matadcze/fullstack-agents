@@ -51,17 +51,14 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="text-2xl text-display font-ultra-bold text-gray-900 tracking-tight">{title}</h2>
+            <h2 className="text-2xl text-display font-ultra-bold text-gray-900 tracking-tight">
+              {title}
+            </h2>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 focus:outline-none"
             >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"

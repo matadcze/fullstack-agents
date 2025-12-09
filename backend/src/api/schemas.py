@@ -12,6 +12,7 @@ from src.domain.value_objects import EventType
 # Generic error schemas
 class ErrorDetail(BaseModel):
     """Error detail information."""
+
     code: str
     message: str
     details: Dict[str, Any] = Field(default_factory=dict)
@@ -20,17 +21,20 @@ class ErrorDetail(BaseModel):
 
 class ErrorResponse(BaseModel):
     """Standard error response."""
+
     error: ErrorDetail
 
 
 # Health check schemas
 class HealthResponse(BaseModel):
     """Health check response."""
+
     status: str
 
 
 class ReadinessResponse(BaseModel):
     """Readiness check response."""
+
     status: str
     components: Dict[str, str]
 
@@ -38,6 +42,7 @@ class ReadinessResponse(BaseModel):
 # Authentication schemas
 class RegisterRequest(BaseModel):
     """User registration request."""
+
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=72)
     full_name: Optional[str] = None
@@ -45,12 +50,14 @@ class RegisterRequest(BaseModel):
 
 class LoginRequest(BaseModel):
     """User login request."""
+
     email: EmailStr = Field(..., description="User email address")
     password: str = Field(..., max_length=72, description="User password")
 
 
 class TokenResponse(BaseModel):
     """JWT token response."""
+
     access_token: str = Field(..., description="Access token")
     refresh_token: str = Field(..., description="Refresh token")
     token_type: str = Field("bearer", description="Token type")
@@ -59,11 +66,13 @@ class TokenResponse(BaseModel):
 
 class RefreshTokenRequest(BaseModel):
     """Token refresh request."""
+
     refresh_token: str = Field(..., description="Refresh token")
 
 
 class ChangePasswordRequest(BaseModel):
     """Password change request."""
+
     current_password: str = Field(..., max_length=72, description="Current password")
     new_password: str = Field(
         ..., min_length=8, max_length=72, description="New password (8-72 characters)"
@@ -72,11 +81,13 @@ class ChangePasswordRequest(BaseModel):
 
 class UpdateProfileRequest(BaseModel):
     """User profile update request."""
+
     full_name: str = Field(..., min_length=1, max_length=100, description="Updated full name")
 
 
 class UserResponse(BaseModel):
     """User information response."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
@@ -88,6 +99,7 @@ class UserResponse(BaseModel):
 # Audit schemas
 class AuditEventResponse(BaseModel):
     """Audit event response."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
@@ -100,6 +112,7 @@ class AuditEventResponse(BaseModel):
 
 class AuditEventListResponse(BaseModel):
     """Paginated audit event list response."""
+
     items: List[AuditEventResponse]
     page: int
     page_size: int

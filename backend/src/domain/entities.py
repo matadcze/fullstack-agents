@@ -2,7 +2,8 @@ from datetime import datetime
 from typing import Dict, Optional
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+
 from src.core.time import utc_now
 
 from .value_objects import EventType
@@ -10,6 +11,7 @@ from .value_objects import EventType
 
 class User(BaseModel):
     """User entity representing an authenticated user in the system."""
+
     id: UUID = Field(default_factory=uuid4)
     email: str
     password_hash: str
@@ -31,6 +33,7 @@ class User(BaseModel):
 
 class AuditEvent(BaseModel):
     """Audit event entity for tracking system actions."""
+
     id: UUID = Field(default_factory=uuid4)
     user_id: Optional[UUID] = None
     event_type: EventType
@@ -43,6 +46,7 @@ class AuditEvent(BaseModel):
 
 class RefreshToken(BaseModel):
     """Refresh token entity for JWT token refresh flow."""
+
     id: UUID = Field(default_factory=uuid4)
     user_id: UUID
     token_hash: str

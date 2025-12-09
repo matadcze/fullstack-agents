@@ -138,7 +138,7 @@ export function Pagination({
               >
                 {page}
               </span>
-            )
+            ),
           )}
 
           {/* Next Button */}

@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userData = await apiClient.auth.me();
         setUser(userData);
       }
-    } catch (error) {
+    } catch {
       // Token might be expired, clear it
       apiClient.setAccessToken(null);
       setUser(null);

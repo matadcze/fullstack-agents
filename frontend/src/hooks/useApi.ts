@@ -17,7 +17,7 @@ export interface UseApiOptions {
  */
 export function useApi<T>(
   fn: () => Promise<T>,
-  options: UseApiOptions = {}
+  options: UseApiOptions = {},
 ): UseApiState<T> & { execute: () => Promise<void> } {
   const { autoExecute = true, onSuccess, onError } = options;
 
@@ -43,6 +43,8 @@ export function useApi<T>(
 
   useEffect(() => {
     if (autoExecute) {
+      // Intended: kick off the initial fetch when opted in.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       execute();
     }
   }, [autoExecute, execute]);
@@ -57,7 +59,7 @@ export function useApiPolling<T>(
   fn: () => Promise<T>,
   shouldStop: (data: T | null) => boolean,
   interval: number = 2000,
-  options: Omit<UseApiOptions, "autoExecute"> = {}
+  options: Omit<UseApiOptions, "autoExecute"> = {},
 ): UseApiState<T> & { stop: () => void } {
   const [state, setState] = useState<UseApiState<T>>({
     data: null,
@@ -90,6 +92,8 @@ export function useApiPolling<T>(
   useEffect(() => {
     if (!isPolling) return;
 
+    // Intended: start polling on mount or when restarted.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     poll();
     const pollInterval = setInterval(poll, interval);
 

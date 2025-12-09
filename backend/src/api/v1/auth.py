@@ -13,8 +13,7 @@ from src.api.schemas import (
 )
 from src.domain.exceptions import AuthenticationError, ValidationError
 from src.domain.services import AuthService
-from src.infrastructure.auth.dependencies import get_current_user
-from src.infrastructure.auth.dependencies import get_current_user_id
+from src.infrastructure.auth.dependencies import get_current_user, get_current_user_id
 from src.infrastructure.auth.rate_limiter import get_auth_rate_limiter
 from src.infrastructure.dependencies import get_auth_service
 

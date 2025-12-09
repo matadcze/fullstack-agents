@@ -110,7 +110,7 @@ export default function ProfilePage() {
   const handleDeleteAccount = async () => {
     setDeleteStatus(null);
     const confirmed = window.confirm(
-      "Are you sure you want to delete your account? This action cannot be undone."
+      "Are you sure you want to delete your account? This action cannot be undone.",
     );
     if (!confirmed) return;
 
@@ -142,7 +142,9 @@ export default function ProfilePage() {
       <header className="bg-white shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-indigo-500 font-semibold">Profile</p>
+            <p className="text-sm uppercase tracking-[0.2em] text-indigo-500 font-semibold">
+              Profile
+            </p>
             <h1 className="text-4xl text-display font-ultra-bold text-gray-900 tracking-tight mt-1">
               Account settings
             </h1>
@@ -195,8 +197,12 @@ export default function ProfilePage() {
             <div className="bg-white shadow rounded-xl p-6 border border-indigo-50">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm uppercase tracking-[0.3em] text-indigo-500 font-semibold">Profile</p>
-                  <h2 className="text-2xl font-ultra-bold text-gray-900 tracking-tight">Update your info</h2>
+                  <p className="text-sm uppercase tracking-[0.3em] text-indigo-500 font-semibold">
+                    Profile
+                  </p>
+                  <h2 className="text-2xl font-ultra-bold text-gray-900 tracking-tight">
+                    Update your info
+                  </h2>
                   <p className="text-sm text-gray-600 mt-1">
                     Change your display name and personal information.
                   </p>
@@ -206,10 +212,11 @@ export default function ProfilePage() {
               <form onSubmit={handleProfileSubmit} className="mt-6 space-y-4">
                 {profileStatus && (
                   <div
-                    className={`rounded-md p-4 text-sm ${profileStatus.type === "success"
+                    className={`rounded-md p-4 text-sm ${
+                      profileStatus.type === "success"
                         ? "bg-emerald-50 text-emerald-800 border border-emerald-100"
                         : "bg-red-50 text-red-800 border border-red-100"
-                      }`}
+                    }`}
                   >
                     {profileStatus.message}
                   </div>
@@ -240,13 +247,15 @@ export default function ProfilePage() {
               </form>
             </div>
 
-
-
             <div className="bg-white shadow rounded-xl p-6 border border-indigo-50">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm uppercase tracking-[0.3em] text-indigo-500 font-semibold">Security</p>
-                  <h2 className="text-2xl font-ultra-bold text-gray-900 tracking-tight">Change password</h2>
+                  <p className="text-sm uppercase tracking-[0.3em] text-indigo-500 font-semibold">
+                    Security
+                  </p>
+                  <h2 className="text-2xl font-ultra-bold text-gray-900 tracking-tight">
+                    Change password
+                  </h2>
                   <p className="text-sm text-gray-600 mt-1">
                     Choose a strong password with at least 8 characters.
                   </p>
@@ -256,10 +265,11 @@ export default function ProfilePage() {
               <form onSubmit={handlePasswordSubmit} className="mt-6 space-y-4">
                 {passwordStatus && (
                   <div
-                    className={`rounded-md p-4 text-sm ${passwordStatus.type === "success"
+                    className={`rounded-md p-4 text-sm ${
+                      passwordStatus.type === "success"
                         ? "bg-emerald-50 text-emerald-800 border border-emerald-100"
                         : "bg-red-50 text-red-800 border border-red-100"
-                      }`}
+                    }`}
                   >
                     {passwordStatus.message}
                   </div>
@@ -300,7 +310,6 @@ export default function ProfilePage() {
                   </label>
                 </div>
 
-
                 <div className="flex justify-end">
                   <button
                     type="submit"
@@ -314,20 +323,26 @@ export default function ProfilePage() {
                 <div className="bg-white shadow rounded-xl p-6 border border-red-100">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm uppercase tracking-[0.3em] text-red-500 font-semibold">Danger</p>
-                      <h2 className="text-2xl font-ultra-bold text-gray-900 tracking-tight">Delete account</h2>
+                      <p className="text-sm uppercase tracking-[0.3em] text-red-500 font-semibold">
+                        Danger
+                      </p>
+                      <h2 className="text-2xl font-ultra-bold text-gray-900 tracking-tight">
+                        Delete account
+                      </h2>
                       <p className="text-sm text-gray-600 mt-1">
-                        Permanently remove your account and all associated data. This action cannot be undone.
+                        Permanently remove your account and all associated data. This action cannot
+                        be undone.
                       </p>
                     </div>
                   </div>
 
                   {deleteStatus && (
                     <div
-                      className={`mt-4 rounded-md p-4 text-sm ${deleteStatus.type === "success"
+                      className={`mt-4 rounded-md p-4 text-sm ${
+                        deleteStatus.type === "success"
                           ? "bg-emerald-50 text-emerald-800 border border-emerald-100"
                           : "bg-red-50 text-red-800 border border-red-100"
-                        }`}
+                      }`}
                     >
                       {deleteStatus.message}
                     </div>

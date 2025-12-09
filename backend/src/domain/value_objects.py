@@ -3,6 +3,7 @@ from enum import Enum
 
 class EventType(str, Enum):
     """Generic audit event types for tracking system actions."""
+
     # User events
     USER_REGISTERED = "USER_REGISTERED"
     USER_LOGGED_IN = "USER_LOGGED_IN"

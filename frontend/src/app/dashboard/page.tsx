@@ -29,10 +29,10 @@ export default function DashboardPage() {
       <header className="bg-white/80 backdrop-blur border-b border-indigo-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-indigo-500 font-semibold">Dashboard</p>
-            <h1 className="text-4xl font-bold text-gray-900 tracking-tight mt-1">
-              {APP_NAME}
-            </h1>
+            <p className="text-xs uppercase tracking-[0.3em] text-indigo-500 font-semibold">
+              Dashboard
+            </p>
+            <h1 className="text-4xl font-bold text-gray-900 tracking-tight mt-1">{APP_NAME}</h1>
             <p className="text-sm text-gray-600 tracking-wide mt-1">
               Welcome, {user.full_name || user.email}
             </p>
@@ -72,18 +72,12 @@ export default function DashboardPage() {
                 />
               </svg>
             </div>
-            <h2 className="mt-4 text-3xl font-bold text-gray-900">
-              Welcome to {APP_NAME}
-            </h2>
-            <p className="mt-2 text-lg text-gray-600">
-              Your authenticated dashboard is ready!
-            </p>
+            <h2 className="mt-4 text-3xl font-bold text-gray-900">Welcome to {APP_NAME}</h2>
+            <p className="mt-2 text-lg text-gray-600">Your authenticated dashboard is ready!</p>
           </div>
 
           <div className="mt-8 border-t border-gray-200 pt-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Account Information
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
             <dl className="space-y-3">
               <div className="flex justify-between">
                 <dt className="text-sm font-medium text-gray-500">Email</dt>
@@ -109,9 +103,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="mt-8 pt-8 border-t border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Quick Actions
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Link
                 href="/profile"
@@ -130,9 +122,7 @@ export default function DashboardPage() {
                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                   />
                 </svg>
-                <span className="text-sm font-medium text-gray-700">
-                  Edit Profile
-                </span>
+                <span className="text-sm font-medium text-gray-700">Edit Profile</span>
               </Link>
               <button
                 onClick={logout}
@@ -151,17 +141,15 @@ export default function DashboardPage() {
                     d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                   />
                 </svg>
-                <span className="text-sm font-medium text-gray-700">
-                  Logout
-                </span>
+                <span className="text-sm font-medium text-gray-700">Logout</span>
               </button>
             </div>
           </div>
 
           <div className="mt-8 p-4 bg-indigo-50 border border-indigo-100 rounded-lg">
             <p className="text-sm text-indigo-900">
-              <strong className="font-semibold">Template Ready!</strong> This is a clean starting point
-              for your next project. Start building your features here.
+              <strong className="font-semibold">Template Ready!</strong> This is a clean starting
+              point for your next project. Start building your features here.
             </p>
           </div>
         </div>

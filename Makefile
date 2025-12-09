@@ -1,4 +1,4 @@
-.PHONY: help install backend-install frontend-install backend-dev frontend-dev dev backend-test frontend-test test backend-lint frontend-lint lint clean docker-build docker-up docker-down
+.PHONY: help install backend-install frontend-install backend-dev frontend-dev dev backend-test frontend-test test backend-lint frontend-lint lint backend-format frontend-format format backend-typecheck pre-commit-install pre-commit seed clean docker-build docker-up docker-down
 
 help:
 	@echo "{{PROJECT_NAME}} - Development Commands"
@@ -14,11 +14,19 @@ help:
 	@echo "  make frontend-dev         Run frontend dev server (port 3000)"
 	@echo ""
 	@echo "Testing & Quality:"
-	@echo "  make test                 Run all tests"
+	@echo "  make test                 Run backend tests"
 	@echo "  make backend-test         Run backend tests"
+	@echo "  make frontend-test        Run frontend Playwright tests"
 	@echo "  make lint                 Run linters"
 	@echo "  make backend-lint         Lint backend code"
+	@echo "  make frontend-lint        Lint frontend code"
 	@echo "  make backend-format       Format backend code"
+	@echo "  make frontend-format      Format frontend code"
+	@echo "  make format               Format backend + frontend"
+	@echo "  make backend-typecheck    Run mypy on the backend"
+	@echo "  make pre-commit-install   Install git hooks (pre-commit)"
+	@echo "  make pre-commit           Run all pre-commit hooks"
+	@echo "  make seed                 Seed local dev data"
 	@echo ""
 	@echo "Docker:"
 	@echo "  make docker-build         Build Docker images"
@@ -61,16 +69,47 @@ backend-test:
 	@echo "Running backend tests..."
 	cd backend && uv run pytest -v
 
-lint: backend-lint
+frontend-test:
+	@echo "Running frontend tests (Playwright)..."
+	cd frontend && npm run test:e2e
+
+lint: backend-lint frontend-lint
 	@echo "All linters passed"
 
 backend-lint:
 	@echo "Linting backend code..."
 	cd backend && uv run ruff check . && uv run black --check .
 
+frontend-lint:
+	@echo "Linting frontend code..."
+	cd frontend && npm run lint
+
 backend-format:
 	@echo "Formatting backend code..."
-	cd backend && uv run black . && uv run ruff check --fix .
+	cd backend && uv run isort . && uv run black . && uv run ruff check --fix .
+
+frontend-format:
+	@echo "Formatting frontend code..."
+	cd frontend && npm run format
+
+format: backend-format frontend-format
+	@echo "Formatting complete"
+
+backend-typecheck:
+	@echo "Type checking backend code..."
+	cd backend && uv run mypy --config-file pyproject.toml src
+
+pre-commit-install:
+	@echo "Installing pre-commit git hooks..."
+	cd backend && uv run pre-commit install
+
+pre-commit:
+	@echo "Running pre-commit hooks..."
+	cd backend && uv run pre-commit run --all-files
+
+seed:
+	@echo "Seeding local development data..."
+	cd backend && uv run python -m scripts.seed_data
 
 
 docker-build:
