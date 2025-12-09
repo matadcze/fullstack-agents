@@ -21,9 +21,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self.redis_url = redis_url or settings.redis_url
         self.requests_per_minute = requests_per_minute or settings.rate_limit_per_minute
         self.window_size = 60
-        self._redis_client: Optional[Redis[str]] = None
+        self._redis_client: Optional[Redis] = None
 
-    async def get_redis_client(self) -> Redis[str]:
+    async def get_redis_client(self) -> Redis:
         if self._redis_client is None:
             self._redis_client = aioredis.from_url(
                 self.redis_url, decode_responses=True, encoding="utf-8"

@@ -18,9 +18,9 @@ class AuthRateLimiter:
 
     def __init__(self, redis_url: Optional[str] = None):
         self.redis_url = redis_url or settings.redis_url
-        self._redis_client: Optional[Redis[str]] = None
+        self._redis_client: Optional[Redis] = None
 
-    async def get_redis_client(self) -> Redis[str]:
+    async def get_redis_client(self) -> Redis:
         if self._redis_client is None:
             self._redis_client = aioredis.from_url(
                 self.redis_url, decode_responses=True, encoding="utf-8"
