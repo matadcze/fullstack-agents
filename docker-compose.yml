@@ -4,7 +4,7 @@ services:
     image: postgres:16-alpine
     container_name: {{PROJECT_NAME_LOWER}}-postgres
     env_file:
-      - ./backend/.env
+      - ./.env
     ports:
       - "5432:5432"
     volumes:
@@ -40,7 +40,7 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - ./backend/.env
+      - ./.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -61,7 +61,7 @@ services:
       dockerfile: Dockerfile
     container_name: {{PROJECT_NAME_LOWER}}-celery-worker
     env_file:
-      - ./backend/.env
+      - ./.env
     command: uv run celery -A src.worker.celery_app worker --loglevel=info
     depends_on:
       postgres:
@@ -77,7 +77,7 @@ services:
       dockerfile: Dockerfile
     container_name: {{PROJECT_NAME_LOWER}}-celery-beat
     env_file:
-      - ./backend/.env
+      - ./.env
     command: uv run celery -A src.worker.celery_app beat --loglevel=info
     depends_on:
       postgres:
@@ -95,7 +95,7 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - ./backend/.env
+      - ./.env
     depends_on:
       backend:
         condition: service_healthy
