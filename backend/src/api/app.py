@@ -7,7 +7,12 @@ from fastapi.responses import JSONResponse
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from src.api.middleware import MetricsMiddleware, RateLimitMiddleware, RequestLoggingMiddleware
+from src.api.middleware import (
+    MetricsMiddleware,
+    RateLimitMiddleware,
+    RequestLoggingMiddleware,
+    SecurityHeadersMiddleware,
+)
 from src.api.schemas import ErrorDetail, ErrorResponse
 from src.api.v1 import agents, audit, auth, health
 from src.core.config import settings
@@ -46,6 +51,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RateLimitMiddleware)
     app.add_middleware(MetricsMiddleware)
     app.add_middleware(RequestLoggingMiddleware)

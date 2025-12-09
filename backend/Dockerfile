@@ -23,10 +23,23 @@ RUN chmod +x /entrypoint.sh
 RUN mkdir -p data/uploads && \
     chmod -R 755 data
 
+# Create non-root user and group with home directory
+RUN addgroup --system --gid 1001 appgroup && \
+    adduser --system --uid 1001 --gid 1001 --home /home/appuser appuser && \
+    mkdir -p /home/appuser/.cache/uv && \
+    chown -R appuser:appgroup /home/appuser
+
+# Change ownership of app directory and data
+RUN chown -R appuser:appgroup /app /entrypoint.sh
+
+# Switch to non-root user
+USER appuser
+
 EXPOSE 8000
 
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    UV_CACHE_DIR=/home/appuser/.cache/uv
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/api/v1/health || exit 1

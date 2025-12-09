@@ -1,5 +1,11 @@
 from .metrics import MetricsMiddleware
 from .rate_limit import RateLimitMiddleware
 from .request_logging import RequestLoggingMiddleware
+from .security_headers import SecurityHeadersMiddleware
 
-__all__ = ["RateLimitMiddleware", "RequestLoggingMiddleware", "MetricsMiddleware"]
+__all__ = [
+    "RateLimitMiddleware",
+    "RequestLoggingMiddleware",
+    "MetricsMiddleware",
+    "SecurityHeadersMiddleware",
+]

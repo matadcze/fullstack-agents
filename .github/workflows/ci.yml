@@ -27,7 +27,6 @@ jobs:
           uv sync --frozen --group dev
           uv pip install pip-audit
           uv run pip-audit
-        continue-on-error: true
 
       - name: Set up Node
         uses: actions/setup-node@v6
@@ -39,7 +38,6 @@ jobs:
           cd frontend
           npm ci
           npm audit --production
-        continue-on-error: true
 
   backend:
     name: Backend lint & test

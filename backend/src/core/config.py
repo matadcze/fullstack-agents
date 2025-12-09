@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     # Rate Limiting
     rate_limit_per_minute: int = 100
 
+    # Security Headers
+    enable_hsts: bool = False  # Set to True in production when behind HTTPS
+
     # CORS Configuration
     cors_origins: List[str] = [
         "http://localhost",
