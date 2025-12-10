@@ -1,21 +1,21 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: fullstack-agents-postgres
+    container_name: project-name-slug-postgres
     env_file:
       - ./backend/.env
     volumes:
       - postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U fullstack_agents" ]
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres}" ]
       interval: 10s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
-    container_name: fullstack-agents-redis
+    container_name: project-name-slug-redis
     command: [ "redis-server", "--save", "", "--appendonly", "no" ]
     restart: unless-stopped
     healthcheck:
@@ -28,7 +28,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: fullstack-agents-backend
+    container_name: project-name-slug-backend
     env_file:
       - ./backend/.env
     depends_on:
@@ -48,7 +48,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: fullstack-agents-celery-worker
+    container_name: project-name-slug-celery-worker
     env_file:
       - ./backend/.env
     command: uv run celery -A src.worker.celery_app worker --loglevel=info
@@ -63,7 +63,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: fullstack-agents-celery-beat
+    container_name: project-name-slug-celery-beat
     env_file:
       - ./backend/.env
     command: uv run celery -A src.worker.celery_app beat --loglevel=info
@@ -80,7 +80,7 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: https://localhost
-    container_name: fullstack-agents-frontend
+    container_name: project-name-slug-frontend
     env_file:
       - ./frontend/.env
     depends_on:
@@ -90,7 +90,7 @@ services:
 
   nginx:
     image: nginx:1.27-alpine
-    container_name: fullstack-agents-nginx
+    container_name: project-name-slug-nginx
     ports:
       - "80:80"
       - "443:443"

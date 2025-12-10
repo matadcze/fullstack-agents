@@ -19,7 +19,7 @@ cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
    - Set `DATABASE_URL`, `JWT_SECRET_KEY` (e.g. `python -c "import secrets; print(secrets.token_urlsafe(32))"`), and adjust any hostnames/ports.
-   - When using Docker/nginx, set `NEXT_PUBLIC_API_URL` to `http://localhost` in `frontend/.env` so requests go through the reverse proxy. For local Next.js dev (`npm run dev`), override to `http://localhost:8000` in `frontend/.env.local`.
+   - When using Docker/nginx, set `NEXT_PUBLIC_API_URL` to `https://localhost` in `frontend/.env` (nginx terminates TLS with the bundled self-signed cert). For local Next.js dev (`npm run dev`) that talks directly to the backend, override to `http://localhost:8000` in `frontend/.env.local`.
    - For local Next.js runs, you can also place `NEXT_PUBLIC_*` values in `frontend/.env.local`.
 
 3) Local dev (no Docker):
