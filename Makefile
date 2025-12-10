@@ -134,7 +134,7 @@ docker-dev-prepare:
 	@echo "Installing backend dependencies into dev volume..."
 	docker compose -f docker-compose.yml -f docker-compose.override.yml run --rm backend uv sync --frozen --group dev
 	@echo "Installing frontend dependencies into dev volume..."
-	docker compose -f docker-compose.yml -f docker-compose.override.yml run --rm frontend npm install
+	docker compose -f docker-compose.yml -f docker-compose.override.yml run --rm frontend npm ci --include=dev
 
 docker-dev-up:
 	@echo "Starting dev stack with hot reload (backend+frontend+nginx)..."
