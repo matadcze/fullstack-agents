@@ -11,31 +11,31 @@ requires-python = ">=3.12"
 
 dependencies = [
     # Core framework
-    "fastapi>=0.121.2",
+    "fastapi>=0.124.0",
     "uvicorn[standard]>=0.38.0",
-    "pydantic>=2.12.4",
+    "pydantic>=2.12.5",
     "pydantic-settings>=2.12.0",
     "pydantic[email]>=2.12.4",
     "python-dotenv>=1.2.1",
     "python-multipart>=0.0.20",
     "aiosqlite>=0.20.0",
     # Database
-    "sqlalchemy>=2.0.0",
-    "alembic>=1.13.0",
+    "sqlalchemy>=2.0.45",
+    "alembic>=1.17.2",
     "psycopg2-binary>=2.9.0",
     "asyncpg>=0.29.0",
     # Authentication
-    "python-jose[cryptography]>=3.3.0",
-    "bcrypt>=4.0.0",
+    "python-jose[cryptography]>=3.5.0",
+    "bcrypt>=5.0.0",
     # Caching and Queue
-    "redis>=5.0.0",
-    "celery>=5.3.0",
+    "redis>=7.1.0",
+    "celery>=5.6.0",
     # Monitoring and Observability
-    "prometheus-client>=0.19.0",
-    "prometheus-fastapi-instrumentator>=7.0.0",
+    "prometheus-client>=0.23.1",
+    "prometheus-fastapi-instrumentator>=7.1.0",
     # Utilities
     "requests>=2.32.5",
-    "greenlet>=3.2.4",
+    "greenlet>=3.3.0",
 ]
 
 [dependency-groups]
