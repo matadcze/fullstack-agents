@@ -17,20 +17,13 @@ RUN uv sync --no-dev
 
 # Copy and set entrypoint script permissions
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
 
-# Create data directories
-RUN mkdir -p data/uploads && \
-    chmod -R 755 data
-
-# Create non-root user and group with home directory
-RUN addgroup --system --gid 1001 appgroup && \
+RUN chmod +x /entrypoint.sh && \
+    addgroup --system --gid 1001 appgroup && \
     adduser --system --uid 1001 --gid 1001 --home /home/appuser appuser && \
     mkdir -p /home/appuser/.cache/uv && \
-    chown -R appuser:appgroup /home/appuser
-
-# Change ownership of app directory and data
-RUN chown -R appuser:appgroup /app /entrypoint.sh
+    chown -R appuser:appgroup /home/appuser && \
+    chown -R appuser:appgroup /app /entrypoint.sh
 
 # Switch to non-root user
 USER appuser

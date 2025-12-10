@@ -11,6 +11,7 @@ services:
     command: npm run dev -- --hostname 0.0.0.0 --port 3000
     environment:
       - NEXT_PUBLIC_API_URL=https://localhost
+      - NODE_ENV=development
       - NEXT_ENABLE_HSTS=false
       - WATCHPACK_POLLING=true
     volumes:
