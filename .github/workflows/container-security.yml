@@ -50,7 +50,7 @@ jobs:
           output: backend-sbom.json
 
       - name: Upload SBOM as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: backend-sbom
           path: backend-sbom.json
@@ -92,7 +92,7 @@ jobs:
           output: frontend-sbom.json
 
       - name: Upload SBOM as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: frontend-sbom
           path: frontend-sbom.json
