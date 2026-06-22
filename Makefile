@@ -1,4 +1,4 @@
-.PHONY: help install api-install web-install rust-install api-dev web-dev dev api-test web-test test api-lint web-lint lint api-format web-format format api-typecheck pre-commit-install pre-commit seed clean docker-build docker-up docker-down docker-dev-prepare docker-dev-up rust-build moon-build moon-test
+.PHONY: help install api-install web-install rust-install api-dev web-dev dev api-test web-test test api-lint web-lint lint api-format web-format format api-typecheck pre-commit-install pre-commit seed clean docker-build docker-up docker-down docker-dev-prepare docker-dev-up rust-build moon-build moon-test certs
 
 help:
 	@echo "{{PROJECT_NAME}} - Development Commands"
@@ -42,6 +42,9 @@ help:
 	@echo "  make docker-build         Build Docker images"
 	@echo "  make docker-up            Start Docker containers"
 	@echo "  make docker-down          Stop Docker containers"
+	@echo ""
+	@echo "Certificates:"
+	@echo "  make certs                Generate nginx/certs/ (mkcert if available, else openssl)"
 	@echo ""
 	@echo "Cleanup:"
 	@echo "  make clean                Remove all generated files"
@@ -168,6 +171,22 @@ docker-dev-up:
 	@echo "Starting dev stack with hot reload (api+web+nginx)..."
 	docker compose -f docker-compose.yml -f docker-compose.override.yml up api web nginx
 
+
+certs:
+	@echo "Generating local SSL certificates for nginx..."
+	@if command -v mkcert >/dev/null 2>&1; then \
+		mkcert -install 2>/dev/null || true; \
+		mkcert -key-file nginx/certs/localhost.key -cert-file nginx/certs/localhost.crt localhost 127.0.0.1 ::1; \
+		echo "  Certificates written to nginx/certs/ (system-trusted via mkcert)"; \
+	else \
+		openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+			-keyout nginx/certs/localhost.key \
+			-out nginx/certs/localhost.crt \
+			-subj "/CN=localhost" \
+			-addext "subjectAltName=DNS:localhost,IP:127.0.0.1" 2>/dev/null; \
+		echo "  Self-signed cert written to nginx/certs/"; \
+		echo "  For trusted certs (no browser warning): brew install mkcert && make certs"; \
+	fi
 
 clean:
 	@echo "Cleaning up..."
