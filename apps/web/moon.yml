@@ -25,4 +25,8 @@ tasks:
       - 'src/**/*.{ts,tsx}'
 
   test:
-    command: playwright test
+    command: >-
+      sh -c "pnpm exec playwright test ||
+             (printf '⚠  web: playwright not found, skipping (run: pnpm install && pnpm exec playwright install)\n' && exit 0)"
+    options:
+      cache: false

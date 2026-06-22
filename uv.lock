@@ -6,6 +6,11 @@ resolution-markers = [
     "python_full_version < '3.15'",
 ]
 
+[manifest]
+members = [
+    "project-name-slug",
+]
+
 [[package]]
 name = "aiosqlite"
 version = "0.22.1"
@@ -1047,7 +1052,7 @@ wheels = [
 [[package]]
 name = "project-name-slug"
 version = "0.1.0"
-source = { editable = "." }
+source = { editable = "apps/api" }
 dependencies = [
     { name = "aiosqlite" },
     { name = "alembic" },

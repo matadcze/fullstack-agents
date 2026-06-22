@@ -3,15 +3,21 @@ language: rust
 tasks:
   build:
     command: >-
-      sh -c "maturin build --release ||
+      sh -c "maturin build --release --features extension-module ||
              (printf '⚠  py-core: maturin not installed, skipping (pip install maturin)\n' && exit 0)"
     inputs:
       - 'src/**/*.rs'
       - 'Cargo.toml'
       - 'pyproject.toml'
 
+  test:
+    command: cargo test -p py-core
+    inputs:
+      - 'src/**/*.rs'
+      - 'Cargo.toml'
+
   develop:
-    command: maturin develop
+    command: maturin develop --features extension-module
     options:
       cache: false
       runInCI: false

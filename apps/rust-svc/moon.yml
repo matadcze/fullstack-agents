@@ -6,3 +6,9 @@ tasks:
     inputs:
       - 'src/**/*.rs'
       - 'Cargo.toml'
+
+  test:
+    command: cargo test -p rust-svc
+    inputs:
+      - 'src/**/*.rs'
+      - 'Cargo.toml'

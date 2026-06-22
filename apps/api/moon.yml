@@ -12,6 +12,7 @@ tasks:
     inputs:
       - 'src/**/*.py'
       - 'tests/**/*.py'
+      - 'pyproject.toml'
 
   lint:
     command: uv run ruff check .

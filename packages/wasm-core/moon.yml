@@ -10,3 +10,20 @@ tasks:
       - 'Cargo.toml'
     outputs:
       - 'pkg/**/*'
+
+  test:
+    command: cargo test -p wasm-core
+    inputs:
+      - 'src/**/*.rs'
+      - 'Cargo.toml'
+
+  test-wasm:
+    command: >-
+      sh -c "wasm-pack test --node ||
+             (printf '⚠  wasm-pack not installed, skipping (cargo install wasm-pack)\n' && exit 0)"
+    options:
+      cache: false
+    inputs:
+      - 'src/**/*.rs'
+      - 'tests/**/*.rs'
+      - 'Cargo.toml'

@@ -30,3 +30,6 @@ packages/wasm-core/pkg/*
 # Moon cache
 .moon/cache/
 .moon/offline/
+
+node_modules/
+packages/ts-shared/node_modules/

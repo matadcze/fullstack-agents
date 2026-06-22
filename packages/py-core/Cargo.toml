@@ -5,7 +5,12 @@ edition = "2021"
 
 [lib]
 name = "py_core"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
+# pyo3 is optional so `cargo test` works without Python installed.
+# maturin enables extension-module when building the .so.
 [dependencies]
-pyo3 = { version = "0.22", features = ["extension-module"] }
+pyo3 = { version = "0.22", optional = true }
+
+[features]
+extension-module = ["dep:pyo3", "pyo3/extension-module"]

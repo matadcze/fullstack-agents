@@ -129,6 +129,10 @@ rust-build:
 	@echo "Building Rust workspace..."
 	cargo build --workspace
 
+rust-test:
+	@echo "Testing Rust workspace..."
+	cargo test --workspace
+
 moon-build:
 	@echo "Building all projects (Moon)..."
 	moon run :build
@@ -158,7 +162,7 @@ docker-dev-prepare:
 	@echo "Installing API dependencies into dev volume..."
 	docker compose -f docker-compose.yml -f docker-compose.override.yml run --rm api uv sync --frozen --group dev
 	@echo "Installing web dependencies into dev volume..."
-	docker compose -f docker-compose.yml -f docker-compose.override.yml run --rm web sh -c "corepack enable && pnpm install"
+	docker compose -f docker-compose.yml -f docker-compose.override.yml run --rm web npm install
 
 docker-dev-up:
 	@echo "Starting dev stack with hot reload (api+web+nginx)..."

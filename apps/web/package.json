@@ -10,10 +10,11 @@
     "format": "prettier --cache --write \"**/*.{js,jsx,ts,tsx,json,css,md}\" --ignore-path .prettierignore",
     "test:e2e": "playwright test"
   },
+  "packageManager": "pnpm@9.14.4",
   "engines": {
     "node": ">=22"
   },
-  "dependencies": {
+"dependencies": {
     "next": "^16.3.0-canary.5",
     "react": "19.2.7",
     "react-dom": "19.2.7"
