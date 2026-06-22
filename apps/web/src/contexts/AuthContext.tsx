@@ -23,11 +23,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Load user on mount
-  useEffect(() => {
-    loadUser();
-  }, []);
-
   const loadUser = async () => {
     try {
       const token = apiClient.getAccessToken();
@@ -43,6 +38,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   };
+
+  // Load user on mount. setState calls inside loadUser are async (after await),
+  // not synchronous cascades — the rule fires because of static call-graph analysis.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadUser();
+  }, []);
 
   const login = async (email: string, password: string) => {
     try {

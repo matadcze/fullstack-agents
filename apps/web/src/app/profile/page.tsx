@@ -5,7 +5,7 @@ import { apiClient } from "@/lib/api/client";
 import { getFriendlyErrorMessage } from "@/lib/utils/error";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 type AlertState = { type: "success" | "error"; message: string } | null;
 
@@ -13,7 +13,8 @@ export default function ProfilePage() {
   const { user, loading, logout, updateProfile, refreshUser, deleteAccount } = useAuth();
   const router = useRouter();
 
-  const [fullName, setFullName] = useState("");
+  const [fullNameEdit, setFullNameEdit] = useState<string | null>(null);
+  const fullName = fullNameEdit ?? user?.full_name ?? "";
   const [profileStatus, setProfileStatus] = useState<AlertState>(null);
   const [passwordStatus, setPasswordStatus] = useState<AlertState>(null);
   const [profileLoading, setProfileLoading] = useState(false);
@@ -31,23 +32,13 @@ export default function ProfilePage() {
     }
   }, [loading, user, router]);
 
-  useEffect(() => {
-    if (user?.full_name) {
-      setFullName(user.full_name);
-    } else {
-      setFullName("");
-    }
-  }, [user]);
-
-  const memberSince = useMemo(() => {
-    if (!user?.created_at) return "";
-    const parsed = new Date(user.created_at);
-    return parsed.toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  }, [user?.created_at]);
+  const memberSince = user?.created_at
+    ? new Date(user.created_at).toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    : "";
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +53,7 @@ export default function ProfilePage() {
       setProfileLoading(true);
       await updateProfile(fullName.trim());
       await refreshUser();
+      setFullNameEdit(null);
       setProfileStatus({ type: "success", message: "Profile updated successfully" });
     } catch (error) {
       setProfileStatus({
@@ -228,7 +220,7 @@ export default function ProfilePage() {
                     <input
                       type="text"
                       value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
+                      onChange={(e) => setFullNameEdit(e.target.value)}
                       className="mt-2 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                       placeholder="Your name"
                     />
