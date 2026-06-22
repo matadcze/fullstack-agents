@@ -1,35 +1,47 @@
-# VCS
+# Version control
 .git
 .gitignore
 
-# Dependency caches / installs
-node_modules
+# Dependency caches (installed inside build stages)
+node_modules/
+apps/web/node_modules/
+packages/ts-shared/node_modules/
+apps/api/.venv/
 *.tsbuildinfo
-.venv
-venv
-env
-ENV
-.mypy_cache
-.ruff_cache
-.pytest_cache
-__pycache__/
 
-# Build artifacts
-.next
-dist
-build
-coverage
-.nyc_output
+# Rust build artifacts
+target/
+
+# Next.js
+apps/web/.next/
+
+# TypeScript build output
+packages/ts-shared/dist/
+
+# wasm-pack output (keep .gitkeep, exclude build artifacts)
+packages/wasm-core/pkg/*
+!packages/wasm-core/pkg/.gitkeep
+
+# Moon cache
+.moon/cache/
+.moon/offline/
+
+# Python artifacts
+**/__pycache__/
+**/*.py[oc]
+**/*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
 
 # OS / editor
 .DS_Store
 Thumbs.db
-.vscode
-.idea
+.vscode/
+.idea/
 *.swp
 *.swo
 
-# Env files (provided at runtime)
-.env
-apps/api/.env
-apps/web/.env
+# Secrets (provided at runtime via env_file)
+**/.env
+**/.env.local

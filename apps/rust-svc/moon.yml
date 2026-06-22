@@ -1,0 +1,8 @@
+language: rust
+
+tasks:
+  build:
+    command: cargo build --release -p rust-svc
+    inputs:
+      - 'src/**/*.rs'
+      - 'Cargo.toml'

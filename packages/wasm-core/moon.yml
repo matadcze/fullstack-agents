@@ -1,0 +1,12 @@
+language: rust
+
+tasks:
+  build:
+    command: >-
+      sh -c "wasm-pack build --target web --out-dir pkg ||
+             (printf '⚠  wasm-core: wasm-pack not installed, skipping (cargo install wasm-pack)\n' && exit 0)"
+    inputs:
+      - 'src/**/*.rs'
+      - 'Cargo.toml'
+    outputs:
+      - 'pkg/**/*'

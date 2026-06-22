@@ -16,3 +16,17 @@ localhost.crt
 
 .vscode
 .idea
+
+# Rust
+target/
+*.so
+*.dylib
+*.dll
+
+# wasm-pack output (keep the empty dir marker, ignore build artifacts)
+packages/wasm-core/pkg/*
+!packages/wasm-core/pkg/.gitkeep
+
+# Moon cache
+.moon/cache/
+.moon/offline/

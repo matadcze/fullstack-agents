@@ -1,12 +1,13 @@
-.PHONY: help install api-install web-install api-dev web-dev dev api-test web-test test api-lint web-lint lint api-format web-format format api-typecheck pre-commit-install pre-commit seed clean docker-build docker-up docker-down docker-dev-prepare docker-dev-up
+.PHONY: help install api-install web-install rust-install api-dev web-dev dev api-test web-test test api-lint web-lint lint api-format web-format format api-typecheck pre-commit-install pre-commit seed clean docker-build docker-up docker-down docker-dev-prepare docker-dev-up rust-build moon-build moon-test
 
 help:
 	@echo "{{PROJECT_NAME}} - Development Commands"
 	@echo ""
 	@echo "Setup:"
-	@echo "  make install              Install all dependencies"
-	@echo "  make api-install          Install API dependencies"
-	@echo "  make web-install          Install web dependencies"
+	@echo "  make install              Install all dependencies (api + web + rust fetch)"
+	@echo "  make api-install          Install API dependencies (uv sync)"
+	@echo "  make web-install          Install web dependencies (pnpm install)"
+	@echo "  make rust-install         Fetch Rust dependencies (cargo fetch)"
 	@echo ""
 	@echo "Development:"
 	@echo "  make dev                  Run API and web in parallel"
@@ -28,6 +29,13 @@ help:
 	@echo "  make pre-commit           Run all pre-commit hooks"
 	@echo "  make seed                 Seed local dev data"
 	@echo ""
+	@echo "Rust:"
+	@echo "  make rust-build           Build all Rust workspace members"
+	@echo ""
+	@echo "Moon (cross-language):"
+	@echo "  make moon-build           Build all projects via Moon (cached)"
+	@echo "  make moon-test            Test all projects via Moon (cached)"
+	@echo ""
 	@echo "Docker:"
 	@echo "  make docker-dev-prepare   Install api/web deps into dev volumes for hot reload"
 	@echo "  make docker-dev-up        Run api+web+nginx with dev override (hot reload)"
@@ -39,7 +47,7 @@ help:
 	@echo "  make clean                Remove all generated files"
 
 
-install: api-install web-install
+install: api-install web-install rust-install
 	@echo "All dependencies installed"
 
 api-install:
@@ -48,7 +56,11 @@ api-install:
 
 web-install:
 	@echo "Installing web dependencies..."
-	cd apps/web && npm install
+	pnpm install
+
+rust-install:
+	@echo "Fetching Rust dependencies..."
+	cargo fetch
 
 dev:
 	@echo "Starting development servers..."
@@ -61,7 +73,7 @@ api-dev:
 	cd apps/api && uv run uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 web-dev:
-	cd apps/web && npm run dev
+	cd apps/web && pnpm dev
 
 
 test: api-test
@@ -73,7 +85,7 @@ api-test:
 
 web-test:
 	@echo "Running web tests (Playwright)..."
-	cd apps/web && npm run test:e2e
+	cd apps/web && pnpm test:e2e
 
 lint: api-lint web-lint
 	@echo "All linters passed"
@@ -84,7 +96,7 @@ api-lint:
 
 web-lint:
 	@echo "Linting web code..."
-	cd apps/web && npm run lint
+	cd apps/web && pnpm lint
 
 api-format:
 	@echo "Formatting API code..."
@@ -92,7 +104,7 @@ api-format:
 
 web-format:
 	@echo "Formatting web code..."
-	cd apps/web && npm run format
+	cd apps/web && pnpm format
 
 format: api-format web-format
 	@echo "Formatting complete"
@@ -112,6 +124,18 @@ pre-commit:
 seed:
 	@echo "Seeding local development data..."
 	cd apps/api && uv run python -m scripts.seed_data
+
+rust-build:
+	@echo "Building Rust workspace..."
+	cargo build --workspace
+
+moon-build:
+	@echo "Building all projects (Moon)..."
+	moon run :build
+
+moon-test:
+	@echo "Testing all projects (Moon)..."
+	moon run :test
 
 
 docker-build:
@@ -134,7 +158,7 @@ docker-dev-prepare:
 	@echo "Installing API dependencies into dev volume..."
 	docker compose -f docker-compose.yml -f docker-compose.override.yml run --rm api uv sync --frozen --group dev
 	@echo "Installing web dependencies into dev volume..."
-	docker compose -f docker-compose.yml -f docker-compose.override.yml run --rm web npm ci --include=dev
+	docker compose -f docker-compose.yml -f docker-compose.override.yml run --rm web sh -c "corepack enable && pnpm install"
 
 docker-dev-up:
 	@echo "Starting dev stack with hot reload (api+web+nginx)..."
@@ -149,6 +173,8 @@ clean:
 	find . -type f -name .DS_Store -delete 2>/dev/null || true
 	cd apps/api && rm -rf .venv 2>/dev/null || true
 	cd apps/web && rm -rf node_modules 2>/dev/null || true
+	rm -rf target 2>/dev/null || true
+	rm -rf packages/wasm-core/pkg 2>/dev/null || true
 	@echo "Cleanup complete"
 
 .DEFAULT_GOAL := help

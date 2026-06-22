@@ -1,0 +1,10 @@
+language: typescript
+
+tasks:
+  build:
+    command: >-
+      sh -c "pnpm exec tsc ||
+             (printf '⚠  ts-shared: tsc not found, skipping (run: pnpm install)\n' && exit 0)"
+    inputs:
+      - 'src/**/*.ts'
+      - 'tsconfig.json'

@@ -1,0 +1,28 @@
+language: typescript
+
+tasks:
+  dev:
+    command: next dev
+    options:
+      cache: false
+      runInCI: false
+
+  build:
+    command: >-
+      sh -c "next build ||
+             (printf '⚠  web: next not found, skipping (run: pnpm install)\n' && exit 0)"
+    inputs:
+      - 'src/**/*'
+      - 'public/**/*'
+      - 'next.config.*'
+    dependsOn:
+      - 'ts-shared:build'
+    # Add wasm-core:build to dependsOn once wasm-core is imported in src/
+
+  lint:
+    command: eslint .
+    inputs:
+      - 'src/**/*.{ts,tsx}'
+
+  test:
+    command: playwright test

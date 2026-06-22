@@ -74,10 +74,23 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  rust-svc:
+    build:
+      context: .
+      dockerfile: apps/rust-svc/Dockerfile
+    container_name: project-name-slug-rust-svc
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
   web:
     build:
-      context: ./apps/web
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/web/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: https://localhost
     container_name: project-name-slug-web

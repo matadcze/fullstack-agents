@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = [
+    "apps/rust-svc",
+    "packages/py-core",
+    "packages/wasm-core",
+]

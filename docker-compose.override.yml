@@ -8,15 +8,21 @@ services:
       - PYTHONUNBUFFERED=1
 
   web:
-    command: npm run dev -- --hostname 0.0.0.0 --port 3000
+    image: node:22-alpine
+    working_dir: /workspace
+    command: >
+      sh -c "corepack enable &&
+             pnpm --filter web dev -- --hostname 0.0.0.0 --port 3000"
     environment:
       - NEXT_PUBLIC_API_URL=https://localhost
       - NODE_ENV=development
       - NEXT_ENABLE_HSTS=false
       - WATCHPACK_POLLING=true
     volumes:
-      - ./apps/web:/app
-      - web_node_modules:/app/node_modules
+      - ./apps/web:/workspace/apps/web
+      - ./packages/ts-shared:/workspace/packages/ts-shared
+      - ./pnpm-workspace.yaml:/workspace/pnpm-workspace.yaml:ro
+      - web_node_modules:/workspace/node_modules
 
 volumes:
   api_venv:
