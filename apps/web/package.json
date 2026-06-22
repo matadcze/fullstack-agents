@@ -27,7 +27,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "baseline-browser-mapping": "^2.9.7",
     "eslint": "^9",
-    "eslint-config-next": "16.1.6",
+    "eslint-config-next": "16.2.9",
     "prettier": "^3.4.2",
     "tailwindcss": "^4",
     "typescript": "6.0.3"
