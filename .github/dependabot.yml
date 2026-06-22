@@ -7,7 +7,7 @@ updates:
     open-pull-requests-limit: 10
 
   - package-ecosystem: "pip"
-    directory: "/backend"
+    directory: "/apps/api"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
@@ -16,7 +16,7 @@ updates:
       - dependency-type: "all"
 
   - package-ecosystem: "npm"
-    directory: "/frontend"
+    directory: "/apps/web"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10

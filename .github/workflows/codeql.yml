@@ -25,10 +25,10 @@ jobs:
         include:
           - language: python
             build-mode: none
-            path: backend
+            path: apps/api
           - language: javascript-typescript
             build-mode: none
-            path: frontend
+            path: apps/web
 
     steps:
       - name: Checkout repository

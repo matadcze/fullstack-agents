@@ -12,43 +12,43 @@ repos:
     rev: 25.11.0
     hooks:
       - id: black
-        files: ^backend/
+        files: ^apps/api/
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.6.9
     hooks:
       - id: ruff
-        args: ["--config", "backend/pyproject.toml", "--fix"]
-        files: ^backend/
+        args: ["--config", "apps/api/pyproject.toml", "--fix"]
+        files: ^apps/api/
 
   - repo: https://github.com/PyCQA/isort
     rev: 5.13.2
     hooks:
       - id: isort
-        args: ["--settings-path", "backend/pyproject.toml"]
-        files: ^backend/
+        args: ["--settings-path", "apps/api/pyproject.toml"]
+        files: ^apps/api/
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.12.1
     hooks:
       - id: mypy
-        args: ["--config-file", "backend/pyproject.toml", "backend/src"]
-        files: ^backend/
+        args: ["--config-file", "apps/api/pyproject.toml", "apps/api/src"]
+        files: ^apps/api/
         pass_filenames: false
         additional_dependencies:
           - types-redis
 
   - repo: local
     hooks:
-      - id: frontend-lint
-        name: frontend lint
-        entry: npm run lint --prefix frontend
+      - id: web-lint
+        name: web lint
+        entry: npm run lint --prefix apps/web
         language: system
         pass_filenames: false
-        files: ^frontend/
-      - id: frontend-format
-        name: frontend format
-        entry: npm run format --prefix frontend
+        files: ^apps/web/
+      - id: web-format
+        name: web format
+        entry: npm run format --prefix apps/web
         language: system
         pass_filenames: false
-        files: ^frontend/
+        files: ^apps/web/

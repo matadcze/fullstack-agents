@@ -11,10 +11,8 @@ wheels/
 
 .env
 
-backend/data/uploads
-backend/uploads/
-
 localhost.key
 localhost.crt
 
 .vscode
+.idea

@@ -31,5 +31,5 @@ Thumbs.db
 
 # Env files (provided at runtime)
 .env
-backend/.env
-frontend/.env
+apps/api/.env
+apps/web/.env

@@ -14,24 +14,24 @@ permissions:
   security-events: write
 
 jobs:
-  scan-backend:
-    name: Scan Backend Container
+  scan-api:
+    name: Scan API Container
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Build backend image
+      - name: Build API image
         run: |
-          cd backend
-          docker build -t backend:${{ github.sha }} .
+          cd apps/api
+          docker build -t api:${{ github.sha }} .
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.33.1
         with:
-          image-ref: backend:${{ github.sha }}
+          image-ref: api:${{ github.sha }}
           format: sarif
-          output: trivy-backend-results.sarif
+          output: trivy-api-results.sarif
           severity: CRITICAL,HIGH
           exit-code: 1
 
@@ -39,41 +39,41 @@ jobs:
         uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
-          sarif_file: trivy-backend-results.sarif
-          category: backend-container
+          sarif_file: trivy-api-results.sarif
+          category: api-container
 
       - name: Generate SBOM
         uses: aquasecurity/trivy-action@0.33.1
         with:
-          image-ref: backend:${{ github.sha }}
+          image-ref: api:${{ github.sha }}
           format: cyclonedx
-          output: backend-sbom.json
+          output: api-sbom.json
 
       - name: Upload SBOM as artifact
         uses: actions/upload-artifact@v6
         with:
-          name: backend-sbom
-          path: backend-sbom.json
+          name: api-sbom
+          path: api-sbom.json
           retention-days: 30
 
-  scan-frontend:
-    name: Scan Frontend Container
+  scan-web:
+    name: Scan Web Container
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Build frontend image
+      - name: Build web image
         run: |
-          cd frontend
-          docker build -t frontend:${{ github.sha }} .
+          cd apps/web
+          docker build -t web:${{ github.sha }} .
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.33.1
         with:
-          image-ref: frontend:${{ github.sha }}
+          image-ref: web:${{ github.sha }}
           format: sarif
-          output: trivy-frontend-results.sarif
+          output: trivy-web-results.sarif
           severity: CRITICAL,HIGH
           exit-code: 1
 
@@ -81,19 +81,19 @@ jobs:
         uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
-          sarif_file: trivy-frontend-results.sarif
-          category: frontend-container
+          sarif_file: trivy-web-results.sarif
+          category: web-container
 
       - name: Generate SBOM
         uses: aquasecurity/trivy-action@0.33.1
         with:
-          image-ref: frontend:${{ github.sha }}
+          image-ref: web:${{ github.sha }}
           format: cyclonedx
-          output: frontend-sbom.json
+          output: web-sbom.json
 
       - name: Upload SBOM as artifact
         uses: actions/upload-artifact@v6
         with:
-          name: frontend-sbom
-          path: frontend-sbom.json
+          name: web-sbom
+          path: web-sbom.json
           retention-days: 30

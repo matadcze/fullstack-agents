@@ -21,9 +21,9 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Backend safety check (pip-audit)
+      - name: API safety check (pip-audit)
         run: |
-          cd backend
+          cd apps/api
           uv sync --frozen --group dev
           uv pip install pip-audit
           uv run pip-audit
@@ -33,18 +33,18 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Frontend npm audit (prod)
+      - name: Web npm audit (prod)
         run: |
-          cd frontend
+          cd apps/web
           npm ci
           npm audit --production
 
-  backend:
-    name: Backend lint & test
+  api:
+    name: API lint & test
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: backend
+        working-directory: apps/api
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -57,20 +57,20 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen --group dev
 
-      - name: Lint backend
+      - name: Lint API
         run: |
           uv run ruff check .
           uv run black --check .
 
-      - name: Test backend
+      - name: Test API
         run: uv run pytest -v
 
-  frontend:
-    name: Frontend lint & test
+  web:
+    name: Web lint & test
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: frontend
+        working-directory: apps/web
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -80,16 +80,16 @@ jobs:
         with:
           node-version: "20"
           cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: apps/web/package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint frontend
+      - name: Lint web
         run: npm run lint
 
       # - name: Install Playwright browsers
       #   run: npx playwright install --with-deps
 
-      # - name: Test frontend (Playwright)
+      # - name: Test web (Playwright)
       #   run: npm run test:e2e
