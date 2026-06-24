@@ -286,3 +286,17 @@ Moon caches task outputs by content hash — unchanged Rust crates don't recompi
 | Prometheus | 9091  |                                |
 | Grafana    | 3001  | admin/admin                    |
 | pgAdmin    | 5050  |                                |
+
+## Agent skills
+
+### Issue tracker
+
+Issues live as local markdown files under `.scratch/<feature-slug>/`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default canonical strings: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Multi-context layout — `CONTEXT-MAP.md` at root points to per-service `CONTEXT.md` files under `apps/` and `packages/`. See `docs/agents/domain.md`.
