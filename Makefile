@@ -1,4 +1,4 @@
-.PHONY: help install api-install web-install rust-install api-dev web-dev dev api-test web-test test api-lint web-lint lint api-format web-format format api-typecheck pre-commit-install pre-commit seed clean docker-build docker-up docker-down docker-dev-prepare docker-dev-up rust-build moon-build moon-test certs
+.PHONY: help install api-install web-install rust-install update api-update web-update rust-update api-dev web-dev dev api-test web-test test api-lint web-lint lint api-format web-format format api-typecheck pre-commit-install pre-commit seed clean docker-build docker-up docker-down docker-dev-prepare docker-dev-up rust-build moon-build moon-test certs
 
 help:
 	@echo "{{PROJECT_NAME}} - Development Commands"
@@ -8,6 +8,10 @@ help:
 	@echo "  make api-install          Install API dependencies (uv sync)"
 	@echo "  make web-install          Install web dependencies (pnpm install)"
 	@echo "  make rust-install         Fetch Rust dependencies (cargo fetch)"
+	@echo "  make update               Upgrade all dependencies to latest"
+	@echo "  make api-update           Upgrade Python deps (uv sync --upgrade)"
+	@echo "  make web-update           Upgrade JS deps (pnpm update --recursive)"
+	@echo "  make rust-update          Upgrade Rust deps (cargo update)"
 	@echo ""
 	@echo "Development:"
 	@echo "  make dev                  Run API and web in parallel"
@@ -64,6 +68,21 @@ web-install:
 rust-install:
 	@echo "Fetching Rust dependencies..."
 	cargo fetch
+
+update: api-update web-update rust-update
+	@echo "All dependencies updated"
+
+api-update:
+	@echo "Updating API dependencies..."
+	cd apps/api && uv sync --upgrade
+
+web-update:
+	@echo "Updating web dependencies..."
+	pnpm update --recursive
+
+rust-update:
+	@echo "Updating Rust dependencies..."
+	cargo update
 
 dev:
 	@echo "Starting development servers..."
