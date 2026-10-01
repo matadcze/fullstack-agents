@@ -49,6 +49,7 @@ def create_app() -> FastAPI:
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["WWW-Authenticate"],
     )
 
     app.add_middleware(SecurityHeadersMiddleware)

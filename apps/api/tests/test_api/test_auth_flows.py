@@ -72,6 +72,17 @@ async def test_register_then_login_round_trip(client):
     assert me.json()["email"] == "rt@example.com"
 
 
+async def test_authentication_challenge_is_exposed_to_cross_origin_clients(client):
+    response = await client.get(
+        ME,
+        headers={"Authorization": "******", "Origin": "http://localhost:3000"},
+    )
+
+    assert response.status_code == 401
+    assert response.headers["www-authenticate"] == "Bearer"
+    assert response.headers["access-control-expose-headers"] == "WWW-Authenticate"
+
+
 async def test_register_rejects_duplicate_email(client, db_sessions):
     payload = {"email": "dup@example.com", "password": DEFAULT_PASSWORD, "full_name": "A"}
     assert (await client.post(REGISTER, json=payload)).status_code == 201
