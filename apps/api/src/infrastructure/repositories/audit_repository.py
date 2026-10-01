@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Callable, Optional
 from uuid import UUID
 
 from sqlalchemy import and_, desc, func, select
@@ -9,6 +9,7 @@ from src.domain.entities import AuditEvent
 from src.domain.repositories import AuditEventRepository
 from src.domain.value_objects import EventType
 from src.infrastructure.database.models import AuditEventModel
+from src.infrastructure.metrics.transactional_provider import defer_until_commit
 
 
 class AuditEventRepositoryImpl(AuditEventRepository):
@@ -16,7 +17,9 @@ class AuditEventRepositoryImpl(AuditEventRepository):
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create(self, event: AuditEvent) -> AuditEvent:
+    async def create(
+        self, event: AuditEvent, *, on_commit: Optional[Callable[[], None]] = None
+    ) -> AuditEvent:
         """Create a new audit event in the database."""
         db_event = AuditEventModel(
             id=event.id,
@@ -29,6 +32,8 @@ class AuditEventRepositoryImpl(AuditEventRepository):
         self.session.add(db_event)
         await self.session.flush()
         await self.session.refresh(db_event)
+        if on_commit is not None:
+            defer_until_commit(self.session, on_commit)
         return AuditEvent.model_validate(db_event)
 
     async def list(

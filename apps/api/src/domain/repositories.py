@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import List, Optional
+from typing import Callable, List, Optional
 from uuid import UUID
 
 from .entities import AuditEvent, RefreshToken, User
@@ -40,8 +40,10 @@ class AuditEventRepository(ABC):
     """Repository interface for AuditEvent entity operations."""
 
     @abstractmethod
-    async def create(self, event: AuditEvent) -> AuditEvent:
-        """Create a new audit event."""
+    async def create(
+        self, event: AuditEvent, *, on_commit: Optional[Callable[[], None]] = None
+    ) -> AuditEvent:
+        """Create an audit event and run on_commit only after its outer transaction commits."""
         pass
 
     @abstractmethod

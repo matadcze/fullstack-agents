@@ -19,7 +19,7 @@ os.environ.setdefault("JWT_SECRET_KEY", "changeme-in-tests")
 from src.api.v1 import audit, auth  # noqa: E402
 from src.core.metrics import audit_events_total  # noqa: E402
 from src.core.time import utc_now  # noqa: E402
-from src.domain.entities import RefreshToken, User  # noqa: E402
+from src.domain.entities import AuditEvent, RefreshToken, User  # noqa: E402
 from src.domain.exceptions import AuthenticationError, ValidationError  # noqa: E402
 from src.domain.repositories import (  # noqa: E402
     AuditEventRepository,
@@ -114,6 +114,8 @@ async def test_success_creates_one_safe_audit_event(
     assert created.event_type == event_type
     assert created.user_id == created.resource_id == expected_user_id
     assert created.details == details
+    service.metrics.track_audit_event.assert_not_called()
+    service.audit_repo.create.await_args.kwargs["on_commit"]()
     service.metrics.track_audit_event.assert_called_once_with(event_type.value)
     serialized = created.model_dump_json()
     for secret in (
@@ -254,7 +256,6 @@ async def test_event_and_operation_commit_together(
         )
 
     metrics.track_audit_event.assert_called_once_with(event_type.value)
-
     async with audit_database() as session:
         expected_user_id = result.id if operation == "register" else user.id
         events, total = await AuditEventRepositoryImpl(session).list(resource_id=expected_user_id)
@@ -322,11 +323,11 @@ async def test_later_failure_rolls_back_audit_and_account_deletion(
             )
             await service.delete_account(user.id)
 
+    metrics.track_audit_event.assert_not_called()
     async with audit_database() as session:
         assert await UserRepositoryImpl(session).get_by_id(user.id) == user
         assert not (await session.get(RefreshTokenModel, token.id)).revoked
         assert (await AuditEventRepositoryImpl(session).list())[1] == 0
-    metrics.track_audit_event.assert_not_called()
 
 
 async def test_later_request_failure_does_not_increment_audit_counter(
@@ -387,6 +388,30 @@ async def test_audit_counts_follow_outer_commit_and_savepoint_outcome(
         events, total = await AuditEventRepositoryImpl(session).list(resource_id=user.id)
         assert total == len(expected)
         assert {item.event_type for item in events} == set(expected)
+
+
+async def test_repository_callbacks_and_metrics_share_one_commit_queue(
+    audit_database, stored_account
+):
+    user, _ = stored_account
+    metrics = Mock()
+    async with audit_database.begin() as session:
+        provider = TransactionalMetricsProvider(session, metrics)
+        repository = AuditEventRepositoryImpl(session)
+        await repository.create(AuditEvent(user_id=user.id, event_type=EventType.USER_UPDATED))
+        provider.track_audit_event(EventType.USER_UPDATED.value)
+        await repository.create(
+            AuditEvent(user_id=user.id, event_type=EventType.PASSWORD_CHANGED),
+            on_commit=lambda: provider.track_audit_event(EventType.PASSWORD_CHANGED.value),
+        )
+        metrics.track_audit_event.assert_not_called()
+
+    assert metrics.track_audit_event.call_args_list == [
+        call(EventType.USER_UPDATED.value),
+        call(EventType.PASSWORD_CHANGED.value),
+    ]
+    async with audit_database() as session:
+        assert (await AuditEventRepositoryImpl(session).list(user_id=user.id))[1] == 2
 
 
 @pytest.mark.parametrize("discard", ["rollback", "close"])
