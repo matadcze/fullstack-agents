@@ -4,11 +4,11 @@
 # Stage 1: install dependencies
 FROM node:22-alpine AS deps
 RUN apk add --no-cache libc6-compat
-RUN corepack enable && corepack prepare pnpm@9.14.4 --activate
+RUN corepack enable
 WORKDIR /workspace
 
 # Copy workspace manifests so pnpm can resolve inter-package deps
-COPY pnpm-workspace.yaml pnpm-lock.yaml* ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY packages/ts-shared/package.json ./packages/ts-shared/
 COPY apps/web/package.json ./apps/web/
 
@@ -16,11 +16,13 @@ RUN pnpm install --frozen-lockfile
 
 # Stage 2: build
 FROM node:22-alpine AS builder
-RUN corepack enable && corepack prepare pnpm@9.14.4 --activate
+RUN corepack enable
 WORKDIR /workspace
 
 COPY --from=deps /workspace/node_modules ./node_modules
-COPY pnpm-workspace.yaml ./
+COPY --from=deps /workspace/apps/web/node_modules ./apps/web/node_modules
+COPY --from=deps /workspace/packages/ts-shared/node_modules ./packages/ts-shared/node_modules
+COPY package.json pnpm-workspace.yaml ./
 COPY packages/ts-shared ./packages/ts-shared
 COPY apps/web ./apps/web
 
@@ -34,7 +36,7 @@ ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL} \
     NEXT_TELEMETRY_DISABLED=1
 
 RUN pnpm --filter @project/ts-shared build
-RUN pnpm --filter web build
+RUN pnpm --filter frontend build
 
 # Stage 3: production runner
 FROM node:22-alpine AS runner
@@ -48,9 +50,9 @@ ENV NODE_ENV=production \
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-COPY --from=builder /workspace/apps/web/public ./public
+COPY --from=builder /workspace/apps/web/public ./apps/web/public
 COPY --from=builder --chown=nextjs:nodejs /workspace/apps/web/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /workspace/apps/web/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /workspace/apps/web/.next/static ./apps/web/.next/static
 
 USER nextjs
 
@@ -62,4 +64,4 @@ ENV PORT=3000 \
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD wget -qO- http://localhost:3000 || exit 1
 
-CMD ["node", "server.js"]
+CMD ["node", "apps/web/server.js"]

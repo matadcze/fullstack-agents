@@ -44,7 +44,7 @@ Install these once on your machine before anything else:
 | Python | ≥ 3.12 | [python.org](https://www.python.org/downloads/) or `brew install python` |
 | uv | latest | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
 | Node.js | ≥ 22 | `brew install node` or [nodejs.org](https://nodejs.org) |
-| pnpm | ≥ 9 | `npm install -g pnpm` or `corepack enable && corepack prepare pnpm@latest --activate` |
+| pnpm | 9.14.4 (pinned in root `package.json`) | `corepack enable` or `npm install -g pnpm@9.14.4` |
 | Moon | latest | `curl -fsSL https://moonrepo.dev/install/moon.sh \| bash` |
 | Docker Desktop | latest | [docker.com](https://www.docker.com/products/docker-desktop/) — needed for the full-stack path |
 
@@ -108,6 +108,10 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 make install
 # Runs: uv sync (Python) + pnpm install (Node) + cargo fetch (Rust)
 ```
+
+Run pnpm from the repository root to install both `apps/web` and
+`packages/ts-shared`. `pnpm-lock.yaml` is the only JavaScript lockfile; use
+`pnpm install --frozen-lockfile` for reproducible installs.
 
 Verify the build graph works:
 
@@ -208,7 +212,8 @@ web:build   ← ts-shared:build (TypeScript types)
 ## Developer Tooling
 
 - **Lint/format**: `make lint` and `make format` (runs ruff/black/isort for Python, eslint/prettier for TypeScript).
-- **Type checks**: `make api-typecheck` (mypy).
+- **Type checks**: `make api-typecheck` (mypy), `make web-typecheck` (Next.js route types + TypeScript for the pnpm workspace).
+- **Frontend build**: `make web-build` (shared TypeScript package, then Next.js).
 - **Git hooks**: `make pre-commit-install`, then run on demand with `make pre-commit`.
 - **Sample data**: `make seed` loads fixture users (`admin@example.com` / `ChangeMe123!`) and basic audit events.
 
@@ -236,12 +241,30 @@ Canonical examples: `apps/api/.env.example` and `apps/web/.env.example`
 ```bash
 make api-test       # pytest
 make web-test       # Playwright e2e
+make rust-test      # Cargo workspace tests
 moon run :test      # all projects (cached)
 ```
+
+Install the test browser once with
+`pnpm --filter frontend exec playwright install chromium`. `make web-test`
+builds the frontend first; Playwright then starts the production server
+automatically (or reuses an existing local server on port 3000). When invoking
+`pnpm --filter frontend test:e2e` directly, run `make web-build` first.
+Set `PLAYWRIGHT_BASE_URL` to test an already-running deployment instead.
+
+### Continuous integration
+
+`.github/workflows/ci.yml` installs the pnpm workspace with the root lockfile
+and runs production dependency audits, API lint/tests, frontend lint,
+workspace type checks, shared-package and Next.js builds, and Chromium
+Playwright tests against the production build. Playwright starts and stops
+the Next.js production server and uploads its report and traces for seven
+days. The Rust job checks formatting, runs Clippy with warnings denied, and
+tests every Cargo workspace member using `Cargo.lock`.
 
 ## Next Steps
 
 - Add your domains: extend `apps/api/src/domain` and `apps/api/src/api/v1`
 - Expand `apps/web/src` pages/components for your use case
 - Add Rust logic to `packages/py-core` (PyO3) or `packages/wasm-core` (WASM) and import it
-- Wire CI/CD: `moon run :build :test` as a single cached pipeline step
+- Extend the CI checks as you add services and configure deployment for your environment
