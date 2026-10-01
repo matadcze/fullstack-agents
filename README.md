@@ -266,6 +266,10 @@ automatically (or reuses an existing local server on port 3000). When invoking
 `pnpm --filter frontend test:e2e` directly, run `make web-build` first.
 Set `PLAYWRIGHT_BASE_URL` to test an already-running deployment instead.
 
+Run `make api-install` before the Playwright suite: cross-origin authentication
+tests launch an isolated API fixture from the workspace `.venv`, without requiring
+Postgres or Redis. Set `PLAYWRIGHT_API_PYTHON` to use another API-ready interpreter.
+
 ### Continuous integration
 
 `.github/workflows/ci.yml` installs the pnpm workspace with the root lockfile

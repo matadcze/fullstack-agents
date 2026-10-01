@@ -66,4 +66,24 @@ consumed token returns HTTP 401. The request database dependency commits on succ
 and rolls back on failure, including when replacement storage fails. Other callers
 of the repository must also roll back their transaction on errors.
 
+### Cross-origin authentication challenges
+
+CORS exposes `WWW-Authenticate` to allowed origins, including the local web app at
+`http://localhost:3000`. The browser client uses the Bearer challenge to distinguish
+expired access tokens from incorrect-current-password errors on password changes:
+only token failures trigger refresh and a single retry. Preserve this exposure
+when changing CORS settings; the allowed-origin list remains unchanged.
+
+The browser regression uses the real API with isolated in-memory SQLite/Redis
+and a separate HTTP origin, without requiring Postgres, Redis, or Next.js:
+
+```bash
+# From the repo root, after uv sync and pnpm install:
+cd apps/web
+PLAYWRIGHT_BASE_URL=http://unused pnpm exec playwright test cors-auth.spec.ts --workers=1
+```
+
+It defaults to the workspace `.venv`; set `PLAYWRIGHT_API_PYTHON` to use another
+Python interpreter with the API's development dependencies installed.
+
 Use `{{PROJECT_NAME}}` placeholders throughout when creating a new project; see the root README for the templating checklist.

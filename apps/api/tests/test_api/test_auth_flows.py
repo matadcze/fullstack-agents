@@ -73,6 +73,7 @@ async def test_register_then_login_round_trip(client):
 
 
 async def test_authentication_challenge_is_exposed_to_cross_origin_clients(client):
+    origin = "http://localhost:3000"
     response = await client.get(
         ME,
         headers={"Authorization": "******", "Origin": "http://localhost:3000"},
@@ -80,7 +81,55 @@ async def test_authentication_challenge_is_exposed_to_cross_origin_clients(clien
 
     assert response.status_code == 401
     assert response.headers["www-authenticate"] == "Bearer"
-    assert response.headers["access-control-expose-headers"] == "WWW-Authenticate"
+    exposed = {
+        header.strip().lower()
+        for header in response.headers["access-control-expose-headers"].split(",")
+    }
+    assert "www-authenticate" in exposed
+    assert response.headers["access-control-allow-origin"] == origin
+    assert response.headers["access-control-allow-credentials"] == "true"
+
+
+@pytest.mark.parametrize("origin", settings.cors_origins)
+async def test_cors_preserves_configured_origins_and_auth_preflight(client, origin):
+    response = await client.get("/api/v1/health", headers={"Origin": origin})
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == origin
+    assert response.headers["access-control-allow-credentials"] == "true"
+    assert "www-authenticate" in {
+        header.strip().lower()
+        for header in response.headers["access-control-expose-headers"].split(",")
+    }
+
+    preflight = await client.options(
+        CHANGE_PASSWORD,
+        headers={
+            "Origin": origin,
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "authorization,content-type",
+        },
+    )
+    assert preflight.status_code == 200
+    assert preflight.headers["access-control-allow-origin"] == origin
+    assert preflight.headers["access-control-allow-headers"] == "authorization,content-type"
+
+
+async def test_cors_does_not_allow_unconfigured_origins(client):
+    origin = "https://untrusted.example"
+    response = await client.get(ME, headers={"Authorization": "Bearer invalid", "Origin": origin})
+    assert response.status_code == 401
+    assert "access-control-allow-origin" not in response.headers
+
+    preflight = await client.options(
+        CHANGE_PASSWORD,
+        headers={
+            "Origin": origin,
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "authorization,content-type",
+        },
+    )
+    assert preflight.status_code == 400
+    assert "access-control-allow-origin" not in preflight.headers
 
 
 async def test_register_rejects_duplicate_email(client, db_sessions):
