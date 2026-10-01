@@ -25,7 +25,7 @@ jobs:
         with:
           python-version: "3.12"
           enable-cache: true
-          cache-dependency-glob: "apps/api/uv.lock"
+          cache-dependency-glob: "uv.lock"
 
       - name: API safety check (pip-audit)
         run: |
@@ -62,7 +62,7 @@ jobs:
         with:
           python-version: "3.12"
           enable-cache: true
-          cache-dependency-glob: "apps/api/uv.lock"
+          cache-dependency-glob: "uv.lock"
 
       - name: Install dependencies
         run: uv sync --frozen --group dev
