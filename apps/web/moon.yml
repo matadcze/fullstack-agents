@@ -9,8 +9,10 @@ tasks:
 
   build:
     command: >-
-      sh -c "next build ||
-             (printf '⚠  web: next not found, skipping (run: pnpm install)\n' && exit 0)"
+      sh -c "if [ ! -x node_modules/.bin/next ]; then
+               printf '⚠  web: next not found, skipping (run: pnpm install)\n'; exit 0;
+             fi;
+             exec node_modules/.bin/next build"
     inputs:
       - 'src/**/*'
       - 'public/**/*'
@@ -26,7 +28,9 @@ tasks:
 
   test:
     command: >-
-      sh -c "pnpm exec playwright test ||
-             (printf '⚠  web: playwright not found, skipping (run: pnpm install && pnpm exec playwright install)\n' && exit 0)"
+      sh -c "if [ ! -x node_modules/.bin/playwright ]; then
+               printf '⚠  web: playwright not found, skipping (run: pnpm install && pnpm exec playwright install)\n'; exit 0;
+             fi;
+             exec node_modules/.bin/playwright test"
     options:
       cache: false
