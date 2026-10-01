@@ -208,6 +208,36 @@ make docker-dev-prepare
 make docker-dev-up
 ```
 
+### Trusted-proxy policy
+
+Login audits, request logs, and IP-based rate limits use Uvicorn's resolved client address,
+not headers parsed by application code. Default, dev, and production Compose trust **only**
+nginx's fixed IPv4 address (`172.30.0.2`) on the `gateway` network. nginx is attached only to
+that network; API and web also retain the default network so database, Redis, workers, and
+monitoring remain reachable. nginx replaces `X-Forwarded-For` with its TCP peer's address and
+`X-Forwarded-Proto` with its own scheme, discarding client-supplied values.
+
+The API's direct Docker port remains available at `http://localhost:8000` in default/dev mode,
+but is bound to host loopback only. The Docker gateway, other containers, and loopback peers
+are **not** trusted proxies. Production publishes only nginx's ingress ports.
+Native local startup (`make dev`, `make api-dev`, `moon run api:dev`) disables forwarded
+headers entirely. A standalone API Docker image trusts no peers unless explicitly configured.
+
+If `172.30.0.0/24` conflicts with an existing network, copy the root `.env.example` to `.env`
+and change `API_PROXY_SUBNET` and `NGINX_PROXY_IP` together. Compose uses that same single IP
+for both nginx's address and Uvicorn's `FORWARDED_ALLOW_IPS`. Also set
+`API_PROXY_DYNAMIC_RANGE` to a range inside the subnet that excludes nginx's address, so
+API/web dynamic allocation cannot claim the trusted IP before nginx starts. These overrides belong
+in the root Compose `.env`, not `apps/api/.env`. Never set `FORWARDED_ALLOW_IPS=*` or trust
+an entire shared Docker subnet. For a different deployment topology, set an explicit
+proxy allowlist in the server environment and keep ingress header sanitization.
+
+nginx is the client-facing edge in this template. If another load balancer fronts nginx,
+the recorded address is that load balancer until nginx is explicitly configured with a
+restricted real-IP policy for it; do not forward arbitrary client-supplied chains.
+Docker Desktop or host NAT may also hide the original source IP from nginx. This policy
+records nginx's observed peer, not an unverifiable claimed address behind NAT.
+
 ## Cross-Language Builds (Moon)
 
 Moon manages build ordering across languages automatically:

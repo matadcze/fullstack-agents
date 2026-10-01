@@ -95,7 +95,7 @@ dev:
 	$(MAKE) -j2 api-dev web-dev
 
 api-dev:
-	cd apps/api && uv run uvicorn main:app --reload --host 0.0.0.0 --port 8000
+	cd apps/api && uv run uvicorn main:app --reload --host 0.0.0.0 --port 8000 --no-proxy-headers
 
 web-dev:
 	cd apps/web && pnpm dev

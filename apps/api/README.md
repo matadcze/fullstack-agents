@@ -22,12 +22,17 @@ uv run alembic upgrade head
 
 4) Start the API:
 ```
-uv run uvicorn src.api.app:app --reload
+uv run uvicorn src.api.app:app --reload --no-proxy-headers
 ```
 
 Optional:
 - Celery worker: `uv run celery -A src.worker.celery_app worker --loglevel=info`
 - Celery beat: `uv run celery -A src.worker.celery_app beat --loglevel=info`
+
+Local startup disables forwarded headers, so direct clients cannot override their IP.
+The Docker image trusts no proxies by default. All Compose configurations explicitly trust
+only nginx's fixed address on the gateway network; nginx overwrites client-supplied forwarding
+headers. See the root README's trusted-proxy policy before deploying behind another proxy.
 
 ## Developer Tooling
 - Linting/formatting: `make backend-lint` (ruff + black) and `make backend-format` (isort + black + ruff --fix) from the repo root.

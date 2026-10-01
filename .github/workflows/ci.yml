@@ -38,6 +38,19 @@ jobs:
             docker compose "$@" --profile rust config --no-env-resolution --services | grep -Fx rust-svc
           done
 
+      - name: Set up Python with uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Check trusted proxy audit IPs through real nginx
+        working-directory: apps/api
+        run: |
+          uv sync --frozen --group dev
+          uv run pytest tests/test_proxy_headers.py -v --basetemp="$PWD/.pytest_cache/proxy-tests"
+
   dependency-audit:
     name: Dependency audit
     runs-on: ubuntu-latest
