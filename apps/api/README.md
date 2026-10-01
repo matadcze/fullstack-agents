@@ -54,4 +54,16 @@ Optional:
 - `GET /api/v1/audit` – list audit events
 - `POST /api/v1/agents/run` – sample agent endpoint (stubbed provider)
 
+### Refresh-token rotation
+
+Refreshing requires a valid refresh JWT, an unrevoked and unexpired stored token
+belonging to the same user, and an active user account. Refresh JWTs include a unique
+`jti` so tokens issued within the same second remain distinct.
+
+Rotation conditionally consumes the stored token and inserts its replacement in
+the same database transaction. Only one concurrent refresh can succeed; reusing a
+consumed token returns HTTP 401. The request database dependency commits on success
+and rolls back on failure, including when replacement storage fails. Other callers
+of the repository must also roll back their transaction on errors.
+
 Use `{{PROJECT_NAME}}` placeholders throughout when creating a new project; see the root README for the templating checklist.
