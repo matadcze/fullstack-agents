@@ -334,7 +334,8 @@ async def test_deleted_account_cannot_mutate_state_with_lingering_access_token(
     client, register_user
 ):
     user = await register_user("ghost@example.com")
-    assert (await client.delete(ME, headers=user.headers)).status_code == 204
+    delete_response = await client.delete(ME, headers=user.headers)
+    assert delete_response.status_code == 204
 
     again = await client.delete(ME, headers=user.headers)
     profile = await client.put(PROFILE, headers=user.headers, json={"full_name": "Ghost"})
