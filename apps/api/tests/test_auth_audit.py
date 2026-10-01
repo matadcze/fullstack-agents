@@ -3,19 +3,21 @@ import json
 import os
 from datetime import timedelta
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, Mock
-from uuid import UUID
+from unittest.mock import AsyncMock, Mock, call
+from uuid import UUID, uuid4
 
 import pytest
 from fastapi import FastAPI
 from httpx2 import ASGITransport, AsyncClient
-from sqlalchemy import event, select
+from sqlalchemy import event, select, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 os.environ.setdefault("JWT_SECRET_KEY", "changeme-in-tests")
 
 from src.api.v1 import audit, auth  # noqa: E402
+from src.core.metrics import audit_events_total  # noqa: E402
 from src.core.time import utc_now  # noqa: E402
 from src.domain.entities import RefreshToken, User  # noqa: E402
 from src.domain.exceptions import AuthenticationError, ValidationError  # noqa: E402
@@ -36,6 +38,9 @@ from src.infrastructure.database.models import (  # noqa: E402
 )
 from src.infrastructure.database.session import Base  # noqa: E402
 from src.infrastructure.dependencies import get_rate_limiter  # noqa: E402
+from src.infrastructure.metrics.transactional_provider import (  # noqa: E402
+    TransactionalMetricsProvider,
+)
 from src.infrastructure.repositories import (  # noqa: E402
     AuditEventRepositoryImpl,
     RefreshTokenRepositoryImpl,
@@ -205,12 +210,12 @@ async def audit_database(tmp_path):
         await engine.dispose()
 
 
-def database_service(session):
+def database_service(session, metrics=None):
     return AuthService(
         user_repo=UserRepositoryImpl(session),
         refresh_token_repo=RefreshTokenRepositoryImpl(session),
         audit_repo=AuditEventRepositoryImpl(session),
-        metrics=Mock(),
+        metrics=TransactionalMetricsProvider(session, metrics if metrics is not None else Mock()),
         jwt_provider=JWTProvider,
         password_utils=PasswordUtils,
         settings=SimpleNamespace(refresh_token_expire_days=7, access_token_expire_minutes=15),
@@ -240,8 +245,15 @@ async def test_event_and_operation_commit_together(
     audit_database, stored_account, operation, event_type, details
 ):
     user, token = stored_account
+    metrics = Mock()
     async with audit_database.begin() as session:
-        result = await perform_operation(database_service(session), user, operation)
+        result = await perform_operation(database_service(session, metrics), user, operation)
+        metrics.track_audit_event.assert_not_called()
+        metrics.track_auth_operation.assert_called_once_with(
+            operation, "success", duration=pytest.approx(0, abs=2)
+        )
+
+    metrics.track_audit_event.assert_called_once_with(event_type.value)
 
     async with audit_database() as session:
         expected_user_id = result.id if operation == "register" else user.id
@@ -272,9 +284,10 @@ async def test_audit_failure_rolls_back_operation(
     audit_database, stored_account, monkeypatch, operation, event_type, details
 ):
     user, token = stored_account
+    metrics = Mock()
     with pytest.raises(RuntimeError, match="audit write failed"):
         async with audit_database.begin() as session:
-            service = database_service(session)
+            service = database_service(session, metrics)
             monkeypatch.setattr(
                 service.audit_repo,
                 "create",
@@ -282,8 +295,8 @@ async def test_audit_failure_rolls_back_operation(
             )
             await perform_operation(service, user, operation)
 
-    service.metrics.track_audit_event.assert_not_called()
-    service.metrics.track_auth_operation.assert_called_once_with(
+    metrics.track_audit_event.assert_not_called()
+    metrics.track_auth_operation.assert_called_once_with(
         operation, "error", duration=pytest.approx(0, abs=2)
     )
     async with audit_database() as session:
@@ -300,9 +313,10 @@ async def test_later_failure_rolls_back_audit_and_account_deletion(
     audit_database, stored_account, monkeypatch
 ):
     user, token = stored_account
+    metrics = Mock()
     with pytest.raises(RuntimeError, match="delete failed"):
         async with audit_database.begin() as session:
-            service = database_service(session)
+            service = database_service(session, metrics)
             monkeypatch.setattr(
                 service.user_repo, "delete", AsyncMock(side_effect=RuntimeError("delete failed"))
             )
@@ -312,6 +326,130 @@ async def test_later_failure_rolls_back_audit_and_account_deletion(
         assert await UserRepositoryImpl(session).get_by_id(user.id) == user
         assert not (await session.get(RefreshTokenModel, token.id)).revoked
         assert (await AuditEventRepositoryImpl(session).list())[1] == 0
+    metrics.track_audit_event.assert_not_called()
+
+
+async def test_later_request_failure_does_not_increment_audit_counter(
+    audit_database, stored_account, audit_client, monkeypatch
+):
+    user, token = stored_account
+    counter = audit_events_total.labels(event_type=EventType.USER_DELETED.value)
+    before = counter._value.get()
+    monkeypatch.setattr(
+        UserRepositoryImpl, "delete", AsyncMock(side_effect=RuntimeError("delete failed"))
+    )
+
+    response = await audit_client.delete(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {JWTProvider.create_access_token(user.id)}"},
+    )
+
+    assert response.status_code == 500
+    async with audit_database() as session:
+        assert await UserRepositoryImpl(session).get_by_id(user.id) == user
+        assert not (await session.get(RefreshTokenModel, token.id)).revoked
+        assert (await AuditEventRepositoryImpl(session).list())[1] == 0
+    assert counter._value.get() == before
+
+
+@pytest.mark.parametrize("depth", [1, 2])
+@pytest.mark.parametrize("savepoint_commits", [False, True])
+@pytest.mark.parametrize("outer_commits", [False, True])
+async def test_audit_counts_follow_outer_commit_and_savepoint_outcome(
+    audit_database, stored_account, depth, savepoint_commits, outer_commits
+):
+    user, _ = stored_account
+    metrics = Mock()
+    async with audit_database() as session:
+        service = database_service(session, metrics)
+        await service.update_profile(user.id, "Outer Update")
+        savepoint = await session.begin_nested()
+        inner = await session.begin_nested() if depth == 2 else None
+        await service.change_password(user.id, PASSWORD, NEW_PASSWORD)
+        if inner is not None:
+            await inner.commit()
+            metrics.track_audit_event.assert_not_called()
+        if savepoint_commits:
+            await savepoint.commit()
+        else:
+            await savepoint.rollback()
+        metrics.track_audit_event.assert_not_called()
+        if outer_commits:
+            await session.commit()
+        else:
+            await session.rollback()
+
+    expected = [EventType.USER_UPDATED] if outer_commits else []
+    if outer_commits and savepoint_commits:
+        expected.append(EventType.PASSWORD_CHANGED)
+    assert metrics.track_audit_event.call_args_list == [call(kind.value) for kind in expected]
+    async with audit_database() as session:
+        events, total = await AuditEventRepositoryImpl(session).list(resource_id=user.id)
+        assert total == len(expected)
+        assert {item.event_type for item in events} == set(expected)
+
+
+@pytest.mark.parametrize("discard", ["rollback", "close"])
+async def test_reused_session_does_not_republish_committed_or_discarded_counts(
+    audit_database, stored_account, discard
+):
+    user, _ = stored_account
+    metrics = Mock()
+    async with audit_database() as session:
+        service = database_service(session, metrics)
+        await service.update_profile(user.id, "First Update")
+        await session.commit()
+        metrics.track_audit_event.assert_called_once_with(EventType.USER_UPDATED.value)
+
+        await service.update_profile(user.id, "Discarded Update")
+        await getattr(session, discard)()
+        await session.commit()
+        metrics.track_audit_event.assert_called_once_with(EventType.USER_UPDATED.value)
+
+        await service.update_profile(user.id, "Final Update")
+        await session.commit()
+        assert metrics.track_audit_event.call_args_list == [
+            call(EventType.USER_UPDATED.value),
+            call(EventType.USER_UPDATED.value),
+        ]
+
+    async with audit_database() as session:
+        assert (await AuditEventRepositoryImpl(session).list(resource_id=user.id))[1] == 2
+        assert (await UserRepositoryImpl(session).get_by_id(user.id)).full_name == "Final Update"
+
+
+async def test_failed_database_commit_does_not_publish_or_leak_audit_count(
+    audit_database, stored_account
+):
+    user, _ = stored_account
+    metrics = Mock()
+    async with audit_database() as session:
+        service = database_service(session, metrics)
+        await service.update_profile(user.id, "Uncommitted Update")
+        await session.execute(text("PRAGMA defer_foreign_keys=ON"))
+        await RefreshTokenRepositoryImpl(session).create(
+            RefreshToken(
+                user_id=uuid4(),
+                token_hash="invalid-user-token",
+                expires_at=utc_now() + timedelta(days=1),
+            )
+        )
+        with pytest.raises(IntegrityError, match="FOREIGN KEY"):
+            await session.commit()
+        metrics.track_audit_event.assert_not_called()
+        await session.rollback()
+        await session.commit()
+        metrics.track_audit_event.assert_not_called()
+
+        await service.update_profile(user.id, "Committed Update")
+        await session.commit()
+        metrics.track_audit_event.assert_called_once_with(EventType.USER_UPDATED.value)
+
+    async with audit_database() as session:
+        assert (await AuditEventRepositoryImpl(session).list(resource_id=user.id))[1] == 1
+        assert (
+            await UserRepositoryImpl(session).get_by_id(user.id)
+        ).full_name == "Committed Update"
 
 
 @pytest.fixture
@@ -338,6 +476,10 @@ async def test_auth_endpoints_generate_listable_private_audit_history(
     audit_database, audit_client, password_method
 ):
     client = audit_client
+    counts_before = {
+        kind: audit_events_total.labels(event_type=kind.value)._value.get()
+        for _, kind, _ in OPERATIONS
+    }
     registration = {"email": "new@example.com", "password": PASSWORD, "full_name": "User"}
     response = await client.post("/api/v1/auth/register", json=registration)
     assert response.status_code == 201
@@ -395,6 +537,8 @@ async def test_auth_endpoints_generate_listable_private_audit_history(
         assert sum(item.event_type == EventType.USER_DELETED for item in history) == 1
         assert await session.get(UserModel, UUID(user_id)) is None
         assert (await session.execute(select(RefreshTokenModel))).scalars().all() == []
+    for kind, before in counts_before.items():
+        assert audit_events_total.labels(event_type=kind.value)._value.get() == before + 1
 
 
 @pytest.mark.parametrize("operation,event_type,details", OPERATIONS)

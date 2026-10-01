@@ -17,6 +17,10 @@ Successful registration, login, password changes, profile changes, and account d
 respectively. Events and the associated user/token changes share the request's database transaction;
 an audit write failure rolls back the operation. Failed operations and unchanged profile updates do
 not create success events. Token refresh and client-side logout do not create these events.
+The `audit_events_total` counter increments only after the request transaction commits; rolled-back
+events (including rolled-back savepoints) are not counted. Authentication operation metrics remain
+immediate. Audit counters are in-process telemetry, not a durable outbox: a process crash between
+the database commit and metric publication can miss a count.
 
 Events identify the account through `user_id` and `resource_id`. On account deletion, `user_id` is
 cleared while `resource_id` and the audit history are retained. Details contain only the client IP

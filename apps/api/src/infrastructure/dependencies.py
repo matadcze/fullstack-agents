@@ -13,6 +13,7 @@ from src.infrastructure.auth.password import PasswordUtils
 from src.infrastructure.auth.rate_limiter import AuthRateLimiter, get_auth_rate_limiter
 from src.infrastructure.database.session import get_db
 from src.infrastructure.metrics import PrometheusMetricsProvider
+from src.infrastructure.metrics.transactional_provider import TransactionalMetricsProvider
 from src.infrastructure.repositories import (
     AuditEventRepositoryImpl,
     RefreshTokenRepositoryImpl,
@@ -35,9 +36,9 @@ def get_refresh_token_repository(db: AsyncSession = Depends(get_db)):
     return RefreshTokenRepositoryImpl(db)
 
 
-def get_metrics_provider() -> MetricsProvider:
-    """Get metrics provider instance."""
-    return PrometheusMetricsProvider()
+def get_metrics_provider(db: AsyncSession = Depends(get_db)) -> MetricsProvider:
+    """Get metrics provider bound to the request's database transaction."""
+    return TransactionalMetricsProvider(db, PrometheusMetricsProvider())
 
 
 def get_rate_limiter() -> AuthRateLimiter:
