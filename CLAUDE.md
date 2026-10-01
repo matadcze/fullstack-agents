@@ -260,6 +260,7 @@ Next.js App Router (`src/app/`). Auth state is managed by `AuthContext` (`src/co
 
 **`apps/rust-svc`** — standalone Rust binary service, deployed as its own container:
 - Build: `cargo build --release -p rust-svc`
+- Currently prints a message and exits. Both Compose files gate it behind the opt-in `rust` profile; implement a persistent HTTP server on `0.0.0.0:8080` with `/health` before enabling it with `--profile rust`.
 
 ## Moon Task Runner
 

@@ -13,6 +13,31 @@ permissions:
   contents: read
 
 jobs:
+  compose:
+    name: Compose profiles
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check Rust scaffold is opt-in
+        env:
+          COMPOSE_PROFILES: ""
+        run: |
+          for configuration in default dev prod; do
+            case "$configuration" in
+              default) set -- -f docker-compose.yml ;;
+              dev) set -- -f docker-compose.yml -f docker-compose.override.yml ;;
+              prod) set -- -f docker-compose.prod.yml ;;
+            esac
+            services="$(docker compose "$@" config --no-env-resolution --services)"
+            if grep -Fxq rust-svc <<< "$services"; then
+              echo "rust-svc must not start by default ($configuration)" >&2
+              exit 1
+            fi
+            docker compose "$@" --profile rust config --no-env-resolution --services | grep -Fx rust-svc
+          done
+
   dependency-audit:
     name: Dependency audit
     runs-on: ubuntu-latest
