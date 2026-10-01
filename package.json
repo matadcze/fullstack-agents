@@ -1,0 +1,8 @@
+{
+  "name": "project-workspace",
+  "private": true,
+  "packageManager": "pnpm@9.14.4",
+  "engines": {
+    "node": ">=22"
+  }
+}

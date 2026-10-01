@@ -25,7 +25,7 @@ dependencies = [
     "psycopg2-binary>=2.9.0",
     "asyncpg>=0.29.0",
     # Authentication
-    "python-jose[cryptography]>=3.5.0",
+    "PyJWT[crypto]>=2.10.1",
     "bcrypt>=5.0.0",
     # Caching and Queue
     "redis>=7.1.0",

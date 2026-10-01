@@ -7,10 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "typecheck": "next typegen && tsc --noEmit",
     "format": "prettier --cache --write \"**/*.{js,jsx,ts,tsx,json,css,md}\" --ignore-path .prettierignore",
     "test:e2e": "playwright test"
   },
-  "packageManager": "pnpm@9.14.4",
   "engines": {
     "node": ">=22"
   },

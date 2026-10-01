@@ -85,8 +85,9 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  # Rust service
+  # Rust scaffold: opt-in until it serves HTTP on port 8080 with /health.
   rust-svc:
+    profiles: ["rust"]
     build:
       context: .
       dockerfile: apps/rust-svc/Dockerfile
