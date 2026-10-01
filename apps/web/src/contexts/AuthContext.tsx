@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { apiClient } from "@/lib/api/client";
+import { apiClient, ApiError } from "@/lib/api/client";
 import type { UserResponse } from "@/lib/types/api";
 
 interface AuthContextType {
@@ -30,10 +30,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userData = await apiClient.auth.me();
         setUser(userData);
       }
-    } catch {
-      // Token might be expired, clear it
-      apiClient.setAccessToken(null);
-      setUser(null);
+    } catch (error) {
+      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+        apiClient.auth.logout();
+        setUser(null);
+      }
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -42,8 +44,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Load user on mount. setState calls inside loadUser are async (after await),
   // not synchronous cascades — the rule fires because of static call-graph analysis.
   useEffect(() => {
+    const unsubscribe = apiClient.onSessionInvalidated(() => setUser(null));
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadUser();
+    void loadUser().catch((error) => {
+      console.error("Unable to load user:", error);
+    });
+    return unsubscribe;
   }, []);
 
   const login = async (email: string, password: string) => {

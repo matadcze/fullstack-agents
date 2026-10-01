@@ -10,6 +10,20 @@ Polyglot monorepo starter: FastAPI + Next.js + Rust, with JWT auth, audit loggin
 - **Agent scaffold**: Stub LLM provider with `/api/v1/agents/run` endpoint and frontend demo page to submit prompts.
 - **Ops**: Docker Compose for Postgres, Redis, backend, frontend, Prometheus, Grafana; health/readiness endpoints; Makefile helpers; Moon task runner for cross-language cached builds.
 
+## Frontend Session Recovery
+
+The API client refreshes an expired access token when an authenticated request returns
+401. Concurrent requests share one in-flight refresh; each original request is retried
+at most once with the new token. Login, registration, and refresh requests never trigger
+automatic refresh. Token rotation updates both stored tokens, and logout or a newer
+login prevents an older in-flight refresh from restoring the previous session.
+
+Network errors, timeouts, rate limits, and server failures preserve stored credentials
+and the loaded user while surfacing the error. Rejected refresh tokens or an unauthorized
+retry invalidate the session and clear both tokens. A 403 from `/me` also clears the
+session (the API uses it for inactive users); permission errors on other endpoints do
+not. A wrong current password can return 401 without invalidating the session.
+
 ## Project Structure
 
 ```
