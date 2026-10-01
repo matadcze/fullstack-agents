@@ -1,4 +1,4 @@
-.PHONY: help install api-install web-install rust-install update api-update web-update rust-update api-dev web-dev dev api-test web-test test api-lint web-lint lint api-format web-format format api-typecheck pre-commit-install pre-commit seed clean docker-build docker-up docker-down docker-dev-prepare docker-dev-up rust-build moon-build moon-test certs
+.PHONY: help install api-install web-install rust-install update api-update web-update rust-update api-dev web-dev dev api-test web-test test api-lint web-lint lint api-format web-format format api-typecheck web-typecheck web-build pre-commit-install pre-commit seed clean docker-build docker-up docker-down docker-dev-prepare docker-dev-up rust-build rust-test moon-build moon-test certs
 
 help:
 	@echo "{{PROJECT_NAME}} - Development Commands"
@@ -21,7 +21,7 @@ help:
 	@echo "Testing & Quality:"
 	@echo "  make test                 Run API tests"
 	@echo "  make api-test             Run API tests"
-	@echo "  make web-test             Run web Playwright tests"
+	@echo "  make web-test             Build web and run Playwright tests"
 	@echo "  make lint                 Run linters"
 	@echo "  make api-lint             Lint API code"
 	@echo "  make web-lint             Lint web code"
@@ -29,12 +29,15 @@ help:
 	@echo "  make web-format           Format web code"
 	@echo "  make format               Format API + web"
 	@echo "  make api-typecheck        Run mypy on the API"
+	@echo "  make web-typecheck        Type check the pnpm workspace"
+	@echo "  make web-build            Build shared TypeScript and web"
 	@echo "  make pre-commit-install   Install git hooks (pre-commit)"
 	@echo "  make pre-commit           Run all pre-commit hooks"
 	@echo "  make seed                 Seed local dev data"
 	@echo ""
 	@echo "Rust:"
 	@echo "  make rust-build           Build all Rust workspace members"
+	@echo "  make rust-test            Test all Rust workspace members"
 	@echo ""
 	@echo "Moon (cross-language):"
 	@echo "  make moon-build           Build all projects via Moon (cached)"
@@ -105,7 +108,7 @@ api-test:
 	@echo "Running API tests..."
 	cd apps/api && uv run pytest -v
 
-web-test:
+web-test: web-build
 	@echo "Running web tests (Playwright)..."
 	cd apps/web && pnpm test:e2e
 
@@ -134,6 +137,15 @@ format: api-format web-format
 api-typecheck:
 	@echo "Type checking API code..."
 	cd apps/api && uv run mypy --config-file pyproject.toml src
+
+web-typecheck:
+	@echo "Type checking pnpm workspace..."
+	pnpm -r typecheck
+
+web-build:
+	@echo "Building shared TypeScript and web..."
+	pnpm --filter @project/ts-shared build
+	pnpm --filter frontend build
 
 pre-commit-install:
 	@echo "Installing pre-commit git hooks..."
@@ -184,7 +196,7 @@ docker-dev-prepare:
 	@echo "Installing API dependencies into dev volume..."
 	docker compose -f docker-compose.yml -f docker-compose.override.yml run --rm api uv sync --frozen --group dev
 	@echo "Installing web dependencies into dev volume..."
-	docker compose -f docker-compose.yml -f docker-compose.override.yml run --rm web npm install
+	docker compose -f docker-compose.yml -f docker-compose.override.yml run --rm web sh -c "corepack enable && pnpm install --frozen-lockfile"
 
 docker-dev-up:
 	@echo "Starting dev stack with hot reload (api+web+nginx)..."

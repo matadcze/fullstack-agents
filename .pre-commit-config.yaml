@@ -42,13 +42,13 @@ repos:
     hooks:
       - id: web-lint
         name: web lint
-        entry: npm run lint --prefix apps/web
+        entry: pnpm --filter frontend lint
         language: system
         pass_filenames: false
         files: ^apps/web/
       - id: web-format
         name: web format
-        entry: npm run format --prefix apps/web
+        entry: pnpm --filter frontend format
         language: system
         pass_filenames: false
         files: ^apps/web/
