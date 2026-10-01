@@ -365,7 +365,8 @@ async def test_delete_account_preserves_audit_trail_detached_from_user(
             AuditEvent(user_id=user.id, event_type=EventType.USER_LOGGED_IN)
         )
 
-    assert (await client.delete(ME, headers=user.headers)).status_code == 204
+    response = await client.delete(ME, headers=user.headers)
+    assert response.status_code == 204
 
     async with db_sessions() as session:
         events = (await session.execute(select(AuditEventModel))).scalars().all()
