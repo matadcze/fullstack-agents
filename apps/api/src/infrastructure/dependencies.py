@@ -48,6 +48,7 @@ def get_rate_limiter() -> AuthRateLimiter:
 def get_auth_service(
     user_repo: UserRepository = Depends(get_user_repository),
     refresh_token_repo=Depends(get_refresh_token_repository),
+    audit_repo: AuditEventRepository = Depends(get_audit_repository),
     metrics: MetricsProvider = Depends(get_metrics_provider),
     rate_limiter: AuthRateLimiter = Depends(get_rate_limiter),
 ) -> AuthService:
@@ -55,6 +56,7 @@ def get_auth_service(
     return AuthService(
         user_repo=user_repo,
         refresh_token_repo=refresh_token_repo,
+        audit_repo=audit_repo,
         metrics=metrics,
         jwt_provider=JWTProvider,
         password_utils=PasswordUtils,

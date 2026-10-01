@@ -17,7 +17,11 @@ os.environ.setdefault("JWT_SECRET_KEY", "changeme-in-tests")
 from src.core.time import utc_now  # noqa: E402
 from src.domain.entities import RefreshToken, User  # noqa: E402
 from src.domain.exceptions import AuthenticationError  # noqa: E402
-from src.domain.repositories import RefreshTokenRepository, UserRepository  # noqa: E402
+from src.domain.repositories import (  # noqa: E402
+    AuditEventRepository,
+    RefreshTokenRepository,
+    UserRepository,
+)
 from src.domain.services.auth_service import AuthService, AuthTokens  # noqa: E402
 from src.infrastructure.auth.jwt_provider import JWTProvider  # noqa: E402
 from src.infrastructure.database.models import RefreshTokenModel, UserModel  # noqa: E402
@@ -33,6 +37,7 @@ def make_service(user, repo, jwt_provider=JWTProvider):
     return AuthService(
         user_repo=user_repo,
         refresh_token_repo=repo,
+        audit_repo=AsyncMock(spec=AuditEventRepository),
         metrics=Mock(),
         jwt_provider=jwt_provider,
         password_utils=Mock(),

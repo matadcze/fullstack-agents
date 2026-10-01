@@ -10,6 +10,19 @@ Polyglot monorepo starter: FastAPI + Next.js + Rust, with JWT auth, audit loggin
 - **Agent scaffold**: Stub LLM provider with `/api/v1/agents/run` endpoint and frontend demo page to submit prompts.
 - **Ops**: Docker Compose for Postgres, Redis, backend, frontend, Prometheus, Grafana; health/readiness endpoints; Makefile helpers; Moon task runner for cross-language cached builds.
 
+### Authentication audit events
+
+Successful registration, login, password changes, profile changes, and account deletion create
+`USER_REGISTERED`, `USER_LOGGED_IN`, `PASSWORD_CHANGED`, `USER_UPDATED`, and `USER_DELETED` events,
+respectively. Events and the associated user/token changes share the request's database transaction;
+an audit write failure rolls back the operation. Failed operations and unchanged profile updates do
+not create success events. Token refresh and client-side logout do not create these events.
+
+Events identify the account through `user_id` and `resource_id`. On account deletion, `user_id` is
+cleared while `resource_id` and the audit history are retained. Details contain only the client IP
+for login and changed field names for profile updates; passwords, password hashes, and tokens are
+never included. Authenticated users can view their events through `GET /api/v1/audit`.
+
 ## Project Structure
 
 ```

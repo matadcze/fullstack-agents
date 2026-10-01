@@ -6,9 +6,10 @@ from uuid import UUID
 
 from src.core.time import utc_now
 
-from ..entities import RefreshToken, User
+from ..entities import AuditEvent, RefreshToken, User
 from ..exceptions import AuthenticationError, ValidationError
-from ..repositories import RefreshTokenRepository, UserRepository
+from ..repositories import AuditEventRepository, RefreshTokenRepository, UserRepository
+from ..value_objects import EventType
 from .metrics_provider import MetricsProvider
 
 
@@ -28,6 +29,7 @@ class AuthService:
         self,
         user_repo: UserRepository,
         refresh_token_repo: RefreshTokenRepository,
+        audit_repo: AuditEventRepository,
         metrics: MetricsProvider,
         jwt_provider,
         password_utils,
@@ -36,11 +38,25 @@ class AuthService:
     ):
         self.user_repo = user_repo
         self.refresh_token_repo = refresh_token_repo
+        self.audit_repo = audit_repo
         self.metrics = metrics
         self.jwt_provider = jwt_provider
         self.password_utils = password_utils
         self.settings = settings
         self.rate_limiter = rate_limiter
+
+    async def _record_audit_event(
+        self, event_type: EventType, user_id: UUID, details: dict[str, object] | None = None
+    ) -> None:
+        await self.audit_repo.create(
+            AuditEvent(
+                user_id=user_id,
+                event_type=event_type,
+                resource_id=user_id,
+                details=details if details is not None else {},
+            )
+        )
+        self.metrics.track_audit_event(event_type.value)
 
     async def register(self, email: str, password: str, full_name: str) -> User:
         start_time = time.time()
@@ -68,6 +84,7 @@ class AuthService:
             )
 
             created_user = await self.user_repo.create(user)
+            await self._record_audit_event(EventType.USER_REGISTERED, created_user.id)
 
             duration = time.time() - start_time
             self.metrics.track_auth_operation("register", "success", duration=duration)
@@ -139,6 +156,11 @@ class AuthService:
                 expires_at=self._utcnow() + timedelta(days=self.settings.refresh_token_expire_days),
             )
             await self.refresh_token_repo.create(refresh_token_entity)
+            await self._record_audit_event(
+                EventType.USER_LOGGED_IN,
+                user.id,
+                {"ip": client_ip} if client_ip is not None else None,
+            )
 
             duration = time.time() - start_time
             self.metrics.track_auth_operation("login", "success", duration=duration)
@@ -238,6 +260,7 @@ class AuthService:
             user.password_hash = new_password_hash
             updated_user = await self.user_repo.update(user)
             await self.refresh_token_repo.revoke_by_user_id(user.id)
+            await self._record_audit_event(EventType.PASSWORD_CHANGED, user.id)
 
             duration = time.time() - start_time
             self.metrics.track_auth_operation("change_password", "success", duration=duration)
@@ -275,6 +298,9 @@ class AuthService:
             user.updated_at = self._utcnow()
 
             updated_user = await self.user_repo.update(user)
+            await self._record_audit_event(
+                EventType.USER_UPDATED, user.id, {"changed_fields": ["full_name"]}
+            )
 
             duration = time.time() - start_time
             self.metrics.track_auth_operation("update_profile", "success", duration=duration)
@@ -300,6 +326,7 @@ class AuthService:
                 raise ValidationError("User not found")
 
             await self.refresh_token_repo.revoke_by_user_id(user_id)
+            await self._record_audit_event(EventType.USER_DELETED, user_id)
             await self.user_repo.delete(user_id)
 
             duration = time.time() - start_time
