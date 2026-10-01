@@ -147,11 +147,19 @@ Open:
 
 ### Path B — Full stack with Docker
 
-Builds and starts every service (Postgres, Redis, API, Celery, Web, nginx, Prometheus, Grafana):
+Builds and starts the default services (Postgres, Redis, API, Celery, Web, nginx, Prometheus, Grafana, pgAdmin):
 
 ```bash
 docker compose up -d --build
 ```
+
+`rust-svc` is an unfinished binary scaffold: it prints a startup message and exits,
+so it is excluded from default startup by the opt-in `rust` profile in both
+`docker-compose.yml` and `docker-compose.prod.yml`. Before enabling it, implement
+a persistent HTTP server listening on `0.0.0.0:8080` with a `/health` endpoint.
+Then include it with `docker compose --profile rust up -d --build` (or
+`docker compose -f docker-compose.prod.yml --profile rust up -d --build` for
+production). Explicitly targeting `rust-svc` also enables it regardless of profiles.
 
 Wait ~30 s for migrations and health checks, then:
 
