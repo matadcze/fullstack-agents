@@ -54,9 +54,9 @@ class AuthService:
                 event_type=event_type,
                 resource_id=user_id,
                 details=details if details is not None else {},
-            )
+            ),
+            on_commit=lambda: self.metrics.track_audit_event(event_type.value),
         )
-        self.metrics.track_audit_event(event_type.value)
 
     async def register(self, email: str, password: str, full_name: Optional[str] = None) -> User:
         start_time = time.time()

@@ -109,6 +109,8 @@ async def test_success_creates_one_safe_audit_event(
     assert created.event_type == event_type
     assert created.user_id == created.resource_id == expected_user_id
     assert created.details == details
+    service.metrics.track_audit_event.assert_not_called()
+    service.audit_repo.create.await_args.kwargs["on_commit"]()
     service.metrics.track_audit_event.assert_called_once_with(event_type.value)
     serialized = created.model_dump_json()
     for secret in (
@@ -205,12 +207,12 @@ async def audit_database(tmp_path):
         await engine.dispose()
 
 
-def database_service(session):
+def database_service(session, metrics=None):
     return AuthService(
         user_repo=UserRepositoryImpl(session),
         refresh_token_repo=RefreshTokenRepositoryImpl(session),
         audit_repo=AuditEventRepositoryImpl(session),
-        metrics=Mock(),
+        metrics=metrics or Mock(),
         jwt_provider=JWTProvider,
         password_utils=PasswordUtils,
         settings=SimpleNamespace(refresh_token_expire_days=7, access_token_expire_minutes=15),
@@ -240,9 +242,12 @@ async def test_event_and_operation_commit_together(
     audit_database, stored_account, operation, event_type, details
 ):
     user, token = stored_account
+    metrics = Mock()
     async with audit_database.begin() as session:
-        result = await perform_operation(database_service(session), user, operation)
+        result = await perform_operation(database_service(session, metrics), user, operation)
+        metrics.track_audit_event.assert_not_called()
 
+    metrics.track_audit_event.assert_called_once_with(event_type.value)
     async with audit_database() as session:
         expected_user_id = result.id if operation == "register" else user.id
         events, total = await AuditEventRepositoryImpl(session).list(resource_id=expected_user_id)
@@ -300,14 +305,16 @@ async def test_later_failure_rolls_back_audit_and_account_deletion(
     audit_database, stored_account, monkeypatch
 ):
     user, token = stored_account
+    metrics = Mock()
     with pytest.raises(RuntimeError, match="delete failed"):
         async with audit_database.begin() as session:
-            service = database_service(session)
+            service = database_service(session, metrics)
             monkeypatch.setattr(
                 service.user_repo, "delete", AsyncMock(side_effect=RuntimeError("delete failed"))
             )
             await service.delete_account(user.id)
 
+    metrics.track_audit_event.assert_not_called()
     async with audit_database() as session:
         assert await UserRepositoryImpl(session).get_by_id(user.id) == user
         assert not (await session.get(RefreshTokenModel, token.id)).revoked

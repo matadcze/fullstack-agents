@@ -1,8 +1,8 @@
 from datetime import datetime
-from typing import Optional
+from typing import Callable, Optional
 from uuid import UUID
 
-from sqlalchemy import and_, desc, func, select
+from sqlalchemy import and_, desc, event as sqlalchemy_event, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.entities import AuditEvent
@@ -16,7 +16,9 @@ class AuditEventRepositoryImpl(AuditEventRepository):
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create(self, event: AuditEvent) -> AuditEvent:
+    async def create(
+        self, event: AuditEvent, *, on_commit: Optional[Callable[[], None]] = None
+    ) -> AuditEvent:
         """Create a new audit event in the database."""
         db_event = AuditEventModel(
             id=event.id,
@@ -29,6 +31,24 @@ class AuditEventRepositoryImpl(AuditEventRepository):
         self.session.add(db_event)
         await self.session.flush()
         await self.session.refresh(db_event)
+        if on_commit is not None:
+            callback_state = {"rolled_back": False}
+
+            def after_commit(_session):
+                sqlalchemy_event.remove(self.session.sync_session, "after_rollback", after_rollback)
+                if not callback_state["rolled_back"]:
+                    on_commit()
+
+            def after_rollback(_session):
+                callback_state["rolled_back"] = True
+                sqlalchemy_event.remove(self.session.sync_session, "after_commit", after_commit)
+
+            sqlalchemy_event.listen(
+                self.session.sync_session, "after_commit", after_commit, once=True
+            )
+            sqlalchemy_event.listen(
+                self.session.sync_session, "after_rollback", after_rollback, once=True
+            )
         return AuditEvent.model_validate(db_event)
 
     async def list(
