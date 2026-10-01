@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from jose import ExpiredSignatureError, JWTError, jwt
 
@@ -40,6 +40,7 @@ class JWTProvider:
             "sub": str(user_id),
             "exp": expire,
             "type": "refresh",
+            "jti": str(uuid4()),
         }
 
         encoded_jwt = jwt.encode(

@@ -69,7 +69,16 @@ class RefreshTokenRepository(ABC):
 
     @abstractmethod
     async def get_by_token_hash(self, token_hash: str) -> Optional[RefreshToken]:
-        """Get refresh token by token hash."""
+        """Get an unrevoked, unexpired refresh token by token hash."""
+        pass
+
+    @abstractmethod
+    async def rotate(self, token_hash: str, replacement: RefreshToken) -> bool:
+        """Consume an active token and store its replacement in the caller's transaction.
+
+        Return False if the old token is inactive or belongs to a different user.
+        The caller must roll back the transaction if this operation raises.
+        """
         pass
 
     @abstractmethod

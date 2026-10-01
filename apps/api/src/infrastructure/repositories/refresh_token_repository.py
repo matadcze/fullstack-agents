@@ -56,6 +56,24 @@ class RefreshTokenRepositoryImpl(RefreshTokenRepository):
         )
         await self.session.flush()
 
+    async def rotate(self, token_hash: str, replacement: RefreshToken) -> bool:
+        result = await self.session.execute(
+            update(RefreshTokenModel)
+            .where(
+                RefreshTokenModel.token_hash == token_hash,
+                RefreshTokenModel.user_id == replacement.user_id,
+                RefreshTokenModel.revoked.is_(False),
+                RefreshTokenModel.expires_at > utc_now(),
+            )
+            .values(revoked=True)
+            .returning(RefreshTokenModel.id)
+        )
+        if result.scalar_one_or_none() is None:
+            return False
+
+        await self.create(replacement)
+        return True
+
     async def revoke_by_user_id(self, user_id: UUID) -> None:
 
         await self.session.execute(

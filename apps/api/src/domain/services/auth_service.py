@@ -164,12 +164,24 @@ class AuthService:
 
         try:
             payload = self.jwt_provider.verify_token(refresh_token, token_type="refresh")
-            user_id = UUID(payload["sub"])
+            try:
+                user_id = UUID(payload["sub"])
+            except (KeyError, TypeError, ValueError) as error:
+                raise AuthenticationError("Invalid user ID in token") from error
 
             token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
-            _stored_token = await self.refresh_token_repo.get_by_token_hash(token_hash)
+            stored_token = await self.refresh_token_repo.get_by_token_hash(token_hash)
+            if (
+                stored_token is None
+                or stored_token.revoked
+                or stored_token.expires_at <= self._utcnow()
+                or stored_token.user_id != user_id
+            ):
+                raise AuthenticationError("Invalid or expired refresh token")
 
-            await self.refresh_token_repo.revoke_by_token_hash(token_hash)
+            user = await self.user_repo.get_by_id(user_id)
+            if user is None or not user.can_authenticate():
+                raise AuthenticationError("Account is not active")
 
             access_token = self.jwt_provider.create_access_token(user_id)
             new_refresh_token = self.jwt_provider.create_refresh_token(user_id)
@@ -180,7 +192,8 @@ class AuthService:
                 token_hash=new_token_hash,
                 expires_at=self._utcnow() + timedelta(days=self.settings.refresh_token_expire_days),
             )
-            await self.refresh_token_repo.create(refresh_token_entity)
+            if not await self.refresh_token_repo.rotate(token_hash, refresh_token_entity):
+                raise AuthenticationError("Invalid or expired refresh token")
 
             duration = time.time() - start_time
             self.metrics.track_auth_operation("refresh", "success", duration=duration)
