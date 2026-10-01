@@ -378,7 +378,8 @@ async def test_delete_account_only_affects_the_caller(client, register_user):
     alice = await register_user("alice@example.com")
     bob = await register_user("bob@example.com")
 
-    assert (await client.delete(ME, headers=alice.headers)).status_code == 204
+    delete_response = await client.delete(ME, headers=alice.headers)
+    assert delete_response.status_code == 204
 
     me = await client.get(ME, headers=bob.headers)
     assert me.status_code == 200
