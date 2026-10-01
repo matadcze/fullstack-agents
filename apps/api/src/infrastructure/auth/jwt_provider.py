@@ -2,7 +2,9 @@ from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional
 from uuid import UUID, uuid4
 
-from jose import ExpiredSignatureError, JWTError, jwt
+import jwt
+from jwt import ExpiredSignatureError
+from jwt import PyJWTError as JWTError
 
 from src.core.config import settings
 from src.core.time import utc_now
@@ -77,8 +79,8 @@ class JWTProvider:
                 raise AuthenticationError("Token has expired")
 
             # Validate nbf (not before) claim if present
-            if "nbf" in payload:
-                nbf_timestamp = payload.get("nbf")
+            nbf_timestamp = payload.get("nbf")
+            if nbf_timestamp is not None:
                 nbf_datetime = datetime.fromtimestamp(nbf_timestamp, tz=timezone.utc)
                 if now < nbf_datetime:
                     raise AuthenticationError("Token not yet valid")

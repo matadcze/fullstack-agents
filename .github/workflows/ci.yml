@@ -13,6 +13,31 @@ permissions:
   contents: read
 
 jobs:
+  compose:
+    name: Compose profiles
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check Rust scaffold is opt-in
+        env:
+          COMPOSE_PROFILES: ""
+        run: |
+          for configuration in default dev prod; do
+            case "$configuration" in
+              default) set -- -f docker-compose.yml ;;
+              dev) set -- -f docker-compose.yml -f docker-compose.override.yml ;;
+              prod) set -- -f docker-compose.prod.yml ;;
+            esac
+            services="$(docker compose "$@" config --no-env-resolution --services)"
+            if grep -Fxq rust-svc <<< "$services"; then
+              echo "rust-svc must not start by default ($configuration)" >&2
+              exit 1
+            fi
+            docker compose "$@" --profile rust config --no-env-resolution --services | grep -Fx rust-svc
+          done
+
   dependency-audit:
     name: Dependency audit
     runs-on: ubuntu-latest
@@ -25,7 +50,7 @@ jobs:
         with:
           python-version: "3.12"
           enable-cache: true
-          cache-dependency-glob: "apps/api/uv.lock"
+          cache-dependency-glob: "uv.lock"
 
       - name: API safety check (pip-audit)
         run: |
@@ -34,18 +59,20 @@ jobs:
           uv pip install pip-audit
           uv run pip-audit
 
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+
       - name: Set up Node
         uses: actions/setup-node@v6
         with:
           node-version: "22"
-          cache: npm
-          cache-dependency-path: apps/web/package-lock.json
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
-      - name: Web npm audit (prod)
+      - name: Workspace pnpm audit (prod)
         run: |
-          cd apps/web
-          npm ci
-          npm audit --production
+          pnpm install --frozen-lockfile
+          pnpm audit --prod
 
   api:
     name: API lint & test
@@ -62,7 +89,7 @@ jobs:
         with:
           python-version: "3.12"
           enable-cache: true
-          cache-dependency-glob: "apps/api/uv.lock"
+          cache-dependency-glob: "uv.lock"
 
       - name: Install dependencies
         run: uv sync --frozen --group dev
@@ -76,30 +103,75 @@ jobs:
         run: uv run pytest -v
 
   web:
-    name: Web lint & test
+    name: Web lint, types, build & Playwright
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/web
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
 
       - name: Set up Node
         uses: actions/setup-node@v6
         with:
           node-version: "22"
-          cache: npm
-          cache-dependency-path: apps/web/package-lock.json
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Lint web
-        run: npm run lint
+        run: pnpm --filter frontend lint
 
-      # - name: Install Playwright browsers
-      #   run: npx playwright install --with-deps
+      - name: Type check workspace
+        run: pnpm -r typecheck
 
-      # - name: Test web (Playwright)
-      #   run: npm run test:e2e
+      - name: Build shared TypeScript package
+        run: pnpm --filter @project/ts-shared build
+
+      - name: Build web
+        run: pnpm --filter frontend build
+
+      - name: Install Playwright browsers
+        run: pnpm --filter frontend exec playwright install --with-deps chromium
+
+      - name: Test web (Playwright)
+        run: pnpm --filter frontend test:e2e
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
+          retention-days: 7
+
+  rust:
+    name: Rust format, lint & test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check Rust formatting
+        run: cargo fmt --all -- --check
+
+      - name: Lint Rust workspace
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+
+      - name: Test Rust workspace
+        run: cargo test --workspace --locked
