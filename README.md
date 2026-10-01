@@ -147,11 +147,19 @@ Open:
 
 ### Path B — Full stack with Docker
 
-Builds and starts every service (Postgres, Redis, API, Celery, Web, nginx, Prometheus, Grafana):
+Builds and starts the default services (Postgres, Redis, API, Celery, Web, nginx, Prometheus, Grafana):
 
 ```bash
 docker compose up -d --build
 ```
+
+The Rust service is an unfinished scaffold and is excluded by default. Enable it only after it runs persistently, listens on `0.0.0.0:8080`, and serves `/health`:
+
+```bash
+docker compose --profile rust up -d --build
+```
+
+The production Compose file supports the same opt-in with `docker compose -f docker-compose.prod.yml --profile rust up -d --build`. Explicitly targeting `rust-svc` also starts it regardless of its profile, so do not target it until its HTTP service contract is implemented.
 
 Wait ~30 s for migrations and health checks, then:
 

@@ -13,6 +13,16 @@ permissions:
   contents: read
 
 jobs:
+  compose:
+    name: Docker Compose regression
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check Rust service profiles
+        run: python3 scripts/test_compose_rust_profile.py
+
   dependency-audit:
     name: Dependency audit
     runs-on: ubuntu-latest

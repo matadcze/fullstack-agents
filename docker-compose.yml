@@ -87,6 +87,8 @@ services:
 
   # Rust service
   rust-svc:
+    profiles:
+      - rust
     build:
       context: .
       dockerfile: apps/rust-svc/Dockerfile
