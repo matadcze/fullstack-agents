@@ -42,7 +42,7 @@ class AuthService:
         self.settings = settings
         self.rate_limiter = rate_limiter
 
-    async def register(self, email: str, password: str, full_name: str) -> User:
+    async def register(self, email: str, password: str, full_name: Optional[str] = None) -> User:
         start_time = time.time()
 
         try:
@@ -56,7 +56,7 @@ class AuthService:
             if not password or len(password) < 8:
                 raise ValidationError("Password must be at least 8 characters")
 
-            if not full_name or not full_name.strip():
+            if full_name is not None and not full_name.strip():
                 raise ValidationError("Full name cannot be empty")
 
             password_hash = self.password_utils.hash_password(password)
@@ -64,7 +64,7 @@ class AuthService:
             user = User(
                 email=email,
                 password_hash=password_hash,
-                full_name=full_name.strip(),
+                full_name=full_name.strip() if full_name is not None else None,
             )
 
             created_user = await self.user_repo.create(user)
