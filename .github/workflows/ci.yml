@@ -139,6 +139,17 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm --filter frontend exec playwright install --with-deps chromium
 
+      - name: Set up Python for cross-origin browser tests
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install API browser fixture dependencies
+        working-directory: apps/api
+        run: uv sync --frozen --group dev
+
       - name: Test web (Playwright)
         run: pnpm --filter frontend test:e2e
 
